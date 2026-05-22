@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>carlwang.cn</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero" aria-label="随机渐变色">
+        <p class="eyebrow">carlwang.cn</p>
+        <h1>随机渐变色</h1>
+        <p class="subtitle">每次打开页面都会生成一组新的背景色。</p>
+
+        <div class="palette" aria-label="当前使用的色值">
+          <div class="color-chip">
+            <span class="swatch" id="swatchA"></span>
+            <span id="colorA">#000000</span>
+          </div>
+          <div class="color-chip">
+            <span class="swatch" id="swatchB"></span>
+            <span id="colorB">#000000</span>
+          </div>
+        </div>
+
+        <button id="refreshButton" type="button">换一组颜色</button>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
