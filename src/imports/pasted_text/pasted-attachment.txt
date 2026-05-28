@@ -1,0 +1,743 @@
+Create an interactive clickable website prototype for a personal creative hub called “Carl Wang”.
+
+This is not a traditional portfolio only. It is a personal website that combines:
+1. Public portfolio showcase
+2. Personal project showcase
+3. About / Contact
+4. A protected owner-only Studio tab for content management and personal tools
+
+Important:
+- Do NOT create a public Resources page or Resources navigation item.
+- Do NOT create a separate admin website.
+- Use Scheme B: show a locked “Studio 🔒” tab in the main navigation.
+- When clicking Studio, show a password verification modal or unlock screen.
+- After verification, enter Studio Mode inside the same website.
+- Make the prototype clickable and interactive: navigation, filters, project cards, detail pages, Studio tabs, edit buttons, upload panel, link manager, QR code modal, contact form states.
+- Use placeholder content, but make it feel realistic.
+
+Reference style:
+Take inspiration from:
+- Rafael Varona: artistic personal portfolio, motion/illustration energy, playful visual storytelling
+- ForAI Design: premium creative studio feeling, selected works layout, clean but expressive typography
+- Outpace Studios: bold hero, strong project presentation, dark modern studio aesthetic, sharp CTA sections
+
+Do not copy these websites directly. Use them only as mood references.
+
+Overall visual direction:
+- Initial design can have some style, but do not over-polish it yet
+- Dark premium background
+- Large bold typography
+- Subtle gradient lighting
+- Slight playful motion/illustration feeling
+- Clean project cards
+- Designer portfolio + creative studio feeling
+- Not too corporate, not too SaaS landing page
+- Not childish, not overly cyberpunk
+- Use grayscale / dark base with limited accent colors
+- Desktop-first layout, 1440px wide
+
+Main public navigation:
+Home
+Work
+Lab
+About
+Studio 🔒
+
+Right side CTA:
+Contact
+
+Create these main screens / frames:
+
+1. Home
+2. Work
+3. Project Detail
+4. Lab
+5. Lab Detail
+6. About / Contact
+7. Studio Locked
+8. Studio Unlocked
+
+The prototype should feel like one integrated website, not many separate products.
+
+--------------------------------
+PAGE 1: HOME
+--------------------------------
+
+Purpose:
+A public overview page. Visitors should quickly understand who Carl Wang is, what he does, and where to go next.
+
+Home structure:
+
+Header:
+- Logo / name: Carl Wang
+- Navigation: Home, Work, Lab, About, Studio 🔒
+- CTA button: Contact
+
+Hero section:
+- Main title: Carl Wang
+- Subtitle: Designer / Product Thinker / Creative Builder
+- Slogan: Designing clarity for complex systems.
+- Short intro:
+  “I design product interfaces, visual systems, motion content, and small creative tools that make complex ideas easier to use and understand.”
+- Buttons:
+  - View Work
+  - Explore Lab
+
+Hero visual:
+- Abstract animated-style visual placeholder
+- Could be a floating grid of project cards, small UI fragments, motion frames, and code/tool cards
+- Should feel creative and personal
+
+Featured Work section:
+Show 4 featured project cards:
+1. WattDesk Cloud Platform
+   Category: Product UI / SaaS
+   Description: A cloud platform for energy system monitoring, diagnostics, and remote operation.
+2. iMaster Desktop Tool
+   Category: Desktop App / Device Management
+   Description: A local tool for discovering, configuring, and managing energy devices.
+3. Energy Product Marketing System
+   Category: Branding / Marketing
+   Description: A visual communication system for product launches, brochures, websites, and campaigns.
+4. Product Motion Video Series
+   Category: Video / Motion
+   Description: Motion content for explaining energy products, systems, and installation scenarios.
+
+Each card should include:
+- Image placeholder
+- Project title
+- Category
+- Year
+- Short description
+- Click interaction to Project Detail
+
+What I Do section:
+Create 4 capability cards:
+1. Product & UI Design
+   Complex systems, cloud platforms, device tools, B2B workflows
+2. Visual & Brand Design
+   Brand systems, campaigns, brochures, exhibitions, product storytelling
+3. Motion & Content Design
+   Product videos, launch visuals, social content, explainer animations
+4. Creative Tools & Experiments
+   GitHub projects, mini tools, personal utilities, design experiments
+
+Lab Preview section:
+Show 3 personal project cards:
+1. GitHub Calendar Project
+2. Random Gradient Generator
+3. Link Toolkit
+
+CTA section:
+Title: Want to see how I think and build?
+Buttons:
+- View Work
+- Enter Lab
+- Say Hi
+
+Footer:
+- Email
+- GitHub
+- Xiaohongshu
+- ZCOOL
+- Behance
+- LinkedIn
+- Copyright
+
+Interactions:
+- View Work button goes to Work page
+- Explore Lab button goes to Lab page
+- Contact button goes to About / Contact
+- Featured project cards go to Project Detail
+- Studio tab opens Studio Locked screen or unlock modal
+
+--------------------------------
+PAGE 2: WORK
+--------------------------------
+
+Purpose:
+Show completed professional work, including website design, app/UI, video production, marketing content, presentations, and branding.
+
+Work page structure:
+
+Header:
+Same global navigation.
+
+Page hero:
+- Title: Selected Work
+- Intro:
+  “A collection of product interfaces, websites, videos, visual systems, and marketing content I have designed across energy technology and digital products.”
+
+Filter tabs:
+- All
+- Website
+- App / UI
+- Video / Motion
+- Branding
+- Marketing
+- Presentation
+
+Project grid:
+Create 8 project cards with realistic placeholder content:
+
+1. WattDesk Cloud Platform
+   Category: App / UI
+   Role: Product Design, UI System, UX Logic
+   Year: 2025
+
+2. iMaster Desktop Tool
+   Category: App / UI
+   Role: Product Logic, Interface Design, UX Writing
+   Year: 2025
+
+3. WattCision Business Series Launch
+   Category: Marketing
+   Role: Campaign Design, Copy Structure, Visual Direction
+   Year: 2025
+
+4. Energy Storage Product Website
+   Category: Website
+   Role: Web Design, Content Structure, Visual System
+   Year: 2024
+
+5. Product Motion Video Series
+   Category: Video / Motion
+   Role: Storyboard, Motion Direction, Visual Editing
+   Year: 2025
+
+6. Commercial BESS Brochure System
+   Category: Presentation / Marketing
+   Role: Brochure Design, Layout System, Product Storytelling
+   Year: 2025
+
+7. Brand Visual Guideline
+   Category: Branding
+   Role: Visual Identity, Component System, Template Design
+   Year: 2024
+
+8. Exhibition Visual Package
+   Category: Marketing
+   Role: Booth Visuals, Print Materials, Social Content
+   Year: 2025
+
+Each project card includes:
+- Cover placeholder
+- Title
+- Category badge
+- Year
+- Role
+- Short description
+- View Project button
+
+Interactions:
+- Filter tabs update visible project cards
+- Clicking a project card opens Project Detail
+- Hover state for cards
+- Back to top or contact CTA at bottom
+
+--------------------------------
+PAGE 3: PROJECT DETAIL
+--------------------------------
+
+Purpose:
+Reusable case study template for professional work.
+
+Create one detailed example project:
+Project title: WattDesk Cloud Platform
+
+Structure:
+- Breadcrumb: Work / WattDesk Cloud Platform
+- Project hero:
+  - Title: WattDesk Cloud Platform
+  - Category: Product UI / Cloud Platform
+  - Year: 2025
+  - Role: Product Design, UI System, UX Logic
+  - Tools: Figma, FigJam, Adobe, AI Tools
+  - Large cover image placeholder
+
+Overview:
+“WattDesk is a cloud platform designed for energy device monitoring, remote diagnostics, OTA updates, and operation management.”
+
+Project Info side panel:
+- Client / Context: Energy Technology
+- Platform: Web App
+- Scope: UX, UI, Design System, Product Logic
+- Status: Concept / Internal Product
+
+Challenge section:
+- Complex device data
+- Multiple user roles
+- Alarm and operation workflows
+- Need to make technical information clear and actionable
+
+My Role section:
+- Information architecture
+- Interface design
+- Dashboard layout
+- Device and plant management logic
+- Visual system and interaction patterns
+
+Process section:
+Use 3 to 4 horizontal steps:
+1. Understand system logic
+2. Define user flows
+3. Build UI structure
+4. Refine visual and interaction details
+
+Solution section:
+Show 3 feature cards:
+- Plant Overview Dashboard
+- Device Monitoring
+- Alarm Email / Notification Logic
+
+Gallery section:
+- 4 large image placeholders
+- 2 smaller UI detail placeholders
+
+Result section:
+- Clearer monitoring experience
+- Better structure for installers and service teams
+- Scalable UI framework for future features
+
+Bottom navigation:
+- Previous Project
+- Back to Work
+- Next Project
+
+Interactions:
+- Back to Work button returns to Work
+- Next project changes content or goes to another detail placeholder
+
+--------------------------------
+PAGE 4: LAB
+--------------------------------
+
+Purpose:
+Show personal projects, GitHub projects, mini tools, experiments, and future small programs.
+
+Lab page structure:
+
+Header:
+Same global navigation.
+
+Page hero:
+- Title: Creative Lab
+- Intro:
+  “A space for personal projects, GitHub experiments, small tools, and ideas I build for fun, learning, and daily use.”
+
+Filter tabs:
+- All
+- GitHub
+- Web Tools
+- Mini Program
+- Design Experiments
+- Notes
+
+Lab project cards:
+1. GitHub Calendar Project
+   Type: GitHub
+   Status: Live
+   Description: A calendar-based project for organizing and publishing personal schedules or events.
+   Buttons: View Detail, GitHub
+
+2. Random Gradient Generator
+   Type: Web Tool
+   Status: Building
+   Description: A simple tool that generates random gradient backgrounds and color values.
+
+3. Link Toolkit
+   Type: Web Tool
+   Status: Idea
+   Description: A personal link management and redirect tool with QR code generation.
+
+4. iOS Tips Collection
+   Type: Notes / Content
+   Status: Live
+   Description: A collection of practical iOS efficiency tips and tutorials.
+
+5. Mini Program Experiments
+   Type: Mini Program
+   Status: Idea
+   Description: Future lightweight tools and personal utilities.
+
+6. Design Archive
+   Type: Design Experiments
+   Status: Building
+   Description: A place to collect design ideas, visual references, and reusable patterns.
+
+Each card includes:
+- Status badge
+- Type badge
+- Title
+- Short description
+- GitHub / Demo / Detail buttons
+
+Interactions:
+- Filter tabs update cards
+- Clicking a card opens Lab Detail
+- GitHub buttons look clickable
+
+--------------------------------
+PAGE 5: LAB DETAIL
+--------------------------------
+
+Purpose:
+Detail page for personal projects.
+
+Use this example:
+Title: GitHub Calendar Project
+
+Structure:
+- Breadcrumb: Lab / GitHub Calendar Project
+- Hero:
+  - Title
+  - Type: GitHub Project
+  - Status: Live
+  - Buttons: Open Demo, View GitHub
+  - Cover placeholder
+
+Overview:
+“A lightweight calendar-related personal project built for organizing, sharing, and experimenting with public data.”
+
+Sections:
+- Why I Built This
+- Key Features
+- Tech / Tools
+- Screenshots
+- What I Learned
+- Future Plan
+
+Feature cards:
+- Calendar data structure
+- Public sharing
+- Simple update workflow
+- Mobile-friendly display
+
+Interactions:
+- Open Demo button
+- View GitHub button
+- Back to Lab button
+
+--------------------------------
+PAGE 6: ABOUT / CONTACT
+--------------------------------
+
+Purpose:
+Introduce Carl Wang and provide ways to contact or visit other profiles.
+
+Structure:
+
+Hero:
+- Title: About Carl
+- Intro:
+  “I work between product logic and visual expression. I like building things that are useful, clear, and a little bit delightful.”
+
+Profile card:
+- Name: Carl Wang
+- Role: Designer
+- Location placeholder
+- Email button
+- Contact button
+
+Focus Areas:
+- Product Design
+- UI / UX
+- Visual Design
+- Motion Design
+- Creative Tools
+
+Experience / Timeline:
+Create 3 placeholder timeline items:
+1. Product & Visual Design in Energy Technology
+2. Brand, Website, and Marketing Systems
+3. Personal Tools, Content, and Creative Experiments
+
+Toolbox:
+- Figma
+- Adobe Illustrator
+- Photoshop
+- After Effects
+- Blender
+- GitHub
+- AI Tools
+
+Other Places:
+Create link cards:
+- GitHub
+- Xiaohongshu
+- ZCOOL
+- Behance
+- LinkedIn
+- Email
+
+Contact form:
+Fields:
+- Name
+- Email
+- Subject
+- Message
+Button:
+- Send Message
+
+Also include:
+- Direct email button: Send Email
+
+Interactions:
+- Social cards are clickable
+- Send Message button shows a success state
+- Send Email button opens email style action
+
+--------------------------------
+PAGE 7: STUDIO LOCKED
+--------------------------------
+
+Purpose:
+Protected owner-only entry, using Scheme B.
+
+When user clicks Studio 🔒 from the nav:
+Show an unlock screen or modal.
+
+Structure:
+- Title: Studio Locked
+- Subtitle:
+  “Owner-only space for managing projects, lab items, links, files, and site settings.”
+- Password input
+- Unlock button
+- Cancel button
+- Hint text:
+  “This area is private.”
+
+Interactions:
+- Cancel returns to previous public page
+- Unlock enters Studio Unlocked
+- Wrong password can show a small error state placeholder
+- Successful unlock changes Studio 🔒 to Studio
+
+Design:
+Should feel integrated into the website, not like a corporate admin login.
+
+--------------------------------
+PAGE 8: STUDIO UNLOCKED
+--------------------------------
+
+Purpose:
+Owner-only Studio inside the same website.
+This is not a separate admin dashboard.
+It should feel like a creative control room.
+
+Header:
+Same global navigation, but Studio is unlocked:
+Home / Work / Lab / About / Studio
+
+Studio title:
+Carl Studio
+
+Short intro:
+“Manage portfolio content, personal projects, links, files, QR codes, and basic site information.”
+
+Use internal tabs inside this single Studio page:
+- Overview
+- Projects
+- Lab Items
+- Toolbox
+- Links
+- QR Codes
+- Site Settings
+
+Do not create separate admin URLs. Use tabs inside one Studio page.
+
+Studio Overview tab:
+- Quick stats cards:
+  - Published Projects: 8
+  - Lab Items: 6
+  - Active Links: 5
+  - Draft Items: 3
+- Quick action buttons:
+  - Add Project
+  - Add Lab Item
+  - Upload File
+  - Create Link
+  - Generate QR Code
+
+Projects tab:
+Functions:
+- View project list
+- Add new project
+- Edit project
+- Hide / Show project
+- Delete project
+- Set as Featured
+- Change category
+- Upload cover placeholder
+
+Create a table or card list with:
+- Project title
+- Category
+- Year
+- Status: Published / Hidden / Draft
+- Featured: Yes / No
+- Actions: Edit, Hide, Delete
+
+Add Project / Edit Project panel:
+Fields:
+- Title
+- Slug
+- Category
+- Year
+- Role
+- Short description
+- Cover image upload placeholder
+- Gallery upload placeholder
+- Status
+- Featured toggle
+Buttons:
+- Save
+- Cancel
+
+Lab Items tab:
+Functions:
+- Add personal project
+- Edit personal project
+- Hide / Show
+- Delete
+- Manage GitHub and Demo links
+
+Fields:
+- Title
+- Type
+- Status: Live / Building / Idea / Archived
+- Description
+- GitHub URL
+- Demo URL
+- Cover image
+- Published toggle
+
+Toolbox tab:
+This is a private tool area, not a public Resources page.
+Include these tools:
+1. File Vault
+   - Upload file
+   - File name
+   - File type
+   - Public / Private toggle
+   - Copy share link
+   - Delete file
+   - Note: These files are managed privately and are not shown as a public Resources page.
+
+2. Quick Notes
+   - Small note input
+   - Save note
+   - Mark as pinned
+
+3. Utility placeholder
+   - Future tool card
+   - “More tools coming soon”
+
+Links tab:
+Purpose:
+Manage fixed redirect links.
+
+Functions:
+- Create new fixed link
+- Edit destination URL
+- Enable / disable link
+- Copy link
+- Generate QR code
+
+Example links:
+- /go/github → GitHub profile
+- /go/xiaohongshu → Xiaohongshu profile
+- /go/zcool → ZCOOL profile
+- /go/portfolio → Work page
+- /go/calendar → GitHub Calendar Project
+
+Table fields:
+- Name
+- Slug
+- Destination URL
+- Status
+- Click count placeholder
+- Actions: Edit, Copy, QR, Disable, Delete
+
+QR Codes tab:
+Purpose:
+Generate QR codes for links or custom URLs.
+
+Structure:
+- Input URL
+- Select link from existing links
+- Generate QR Code button
+- QR preview placeholder
+- Download PNG button
+- Copy QR image button
+
+Site Settings tab:
+Manage public website information.
+
+Fields:
+- Display name: Carl Wang
+- Role line: Designer / Product Thinker / Creative Builder
+- Hero slogan
+- Short bio
+- Email
+- GitHub URL
+- Xiaohongshu URL
+- ZCOOL URL
+- Behance URL
+- LinkedIn URL
+- Footer text
+- Save Settings button
+
+Studio interactions:
+- Internal tabs switch content
+- Add/Edit buttons open side panels or modals
+- Save buttons show success toast
+- Hide / Delete buttons show confirmation modal
+- Upload File button opens upload panel
+- Generate QR button shows QR preview
+- Copy buttons show “Copied” state
+- Studio remains visually consistent with the public website
+
+--------------------------------
+PROTOTYPE INTERACTION REQUIREMENTS
+--------------------------------
+
+Make the prototype clickable:
+- Header navigation switches between Home, Work, Lab, About
+- Studio tab opens locked screen
+- Unlock button opens Studio Unlocked
+- Work project cards open Project Detail
+- Lab cards open Lab Detail
+- Back buttons return to list pages
+- Filter tabs show active states
+- Studio internal tabs switch between Overview, Projects, Lab Items, Toolbox, Links, QR Codes, Site Settings
+- Add/Edit/Delete/Hide buttons show modal or panel states
+- Contact form has a success state
+- Link copy and QR buttons show feedback states
+
+--------------------------------
+CONTENT AND STRUCTURE CHECK
+--------------------------------
+
+Before finishing, make sure the generated prototype includes:
+- No public Resources page
+- Public Home page
+- Public Work page
+- Project Detail page
+- Public Lab page
+- Lab Detail page
+- About / Contact page
+- Locked Studio entry in navigation
+- Studio unlock screen
+- Studio unlocked single-page tab interface
+- Project management
+- Lab item management
+- Private file upload tool inside Toolbox
+- Link redirect manager
+- QR code generator
+- Site settings
+- Contact form and external profile links
+- Realistic placeholder content
+- Clickable prototype connections
+
+Final output should be a complete clickable website structure prototype, not just static wireframes.
