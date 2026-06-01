@@ -18,17 +18,17 @@ export function Loader({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const step = 220;
     let n = 0;
-    const id = setInterval(() => {
+    const id = window.setInterval(() => {
       n += 1;
       if (n >= greetings.length) {
-        clearInterval(id);
+        window.clearInterval(id);
         setLeaving(true);
         window.setTimeout(onDone, 700);
         return;
       }
       setI(n);
     }, step);
-    return () => clearInterval(id);
+    return () => window.clearInterval(id);
   }, [onDone]);
 
   return (

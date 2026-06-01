@@ -24,13 +24,27 @@ export type Route =
 
 type Theme = "dark" | "light";
 
+function getTodayKey() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export default function App() {
   const { content } = useContent();
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string>("wattdesk");
   const [labId, setLabId] = useState<string>("gh-calendar");
   const [studioUnlocked, setStudioUnlocked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const todayKey = getTodayKey();
+  const [loading, setLoading] = useState(() => {
+    try {
+      return localStorage.getItem("cw-loader-date") !== todayKey;
+    } catch {
+      return true;
+    }
+  });
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       return (
@@ -199,7 +213,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen relative isolate">
-      {loading && <Loader onDone={() => setLoading(false)} />}
+      {loading && (
+        <Loader
+          onDone={() => {
+            try {
+              localStorage.setItem("cw-loader-date", todayKey);
+            } catch {}
+            setLoading(false);
+          }}
+        />
+      )}
       <div ref={glowRef} className="cursor-glow" />
       <div className="relative z-10">
         <Nav

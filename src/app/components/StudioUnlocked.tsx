@@ -1286,6 +1286,7 @@ function RichContentEditor({
   onChange: (blocks: RichBlock[]) => void;
 }) {
   const [history, setHistory] = useState<RichBlock[][]>([]);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const commitChange = (next: RichBlock[]) => {
     setHistory((items) => [...items.slice(-19), blocks]);
     onChange(next);
@@ -1330,7 +1331,7 @@ function RichContentEditor({
         if (!files.length) return;
         event.preventDefault();
         const images = await Promise.all(files.map(readClipboardImage));
-        onChange([
+        commitChange([
           ...blocks,
           ...images.map((value) => ({
             ...createRichBlock("image"),
@@ -1343,9 +1344,6 @@ function RichContentEditor({
       <div className="flex items-center justify-between mb-5">
         <div>
           <label className="text-[var(--fg)] font-semibold block">{label}</label>
-          <div className="text-[var(--muted)] text-sm mt-1">
-            Edit directly on the canvas. Paste images here, then use Up / Down to reorder blocks.
-          </div>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <button
@@ -1372,10 +1370,34 @@ function RichContentEditor({
         {blocks.map((block, index) => (
           <div
             key={block.id}
-            className="group bg-[var(--app-bg)] border border-[color:var(--line)] transition-shadow hover:border-[color:var(--accent)]/60"
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragOverIndex(index);
+            }}
+            onDragLeave={() => setDragOverIndex(null)}
+            onDrop={(event) => {
+              event.preventDefault();
+              const from = Number(event.dataTransfer.getData("text/plain"));
+              setDragOverIndex(null);
+              moveBlock(from, index);
+            }}
+            className={`group bg-[var(--app-bg)] border transition-shadow ${
+              dragOverIndex === index
+                ? "border-[color:var(--accent)] ring-2 ring-[color:var(--accent)]/20"
+                : "border-[color:var(--line)] hover:border-[color:var(--accent)]/60"
+            }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--line)] bg-[color:var(--surface-2)] px-3 py-2">
-              <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+              <div
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/plain", String(index));
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                onDragEnd={() => setDragOverIndex(null)}
+                className="flex cursor-grab items-center gap-2 text-xs text-[var(--muted)] active:cursor-grabbing"
+                title="Drag to reorder"
+              >
                 <GripVertical className="w-4 h-4" />
                 <span>{index + 1}. {block.type}</span>
               </div>
@@ -1409,7 +1431,7 @@ function RichContentEditor({
                 )}
                 {!block.value && (
                   <UploadBox
-                    label="Image"
+                    label=""
                     accept="image/*"
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
@@ -1424,7 +1446,7 @@ function RichContentEditor({
                 )}
                 {!block.value && (
                   <UploadBox
-                    label="Video"
+                    label=""
                     accept="video/*"
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
@@ -1467,32 +1489,36 @@ function BlockToolbar({
       <button type="button" onClick={onMoveDown} disabled={!canMoveDown} className={buttonClass} title="Move down">
         <ArrowDown className="w-4 h-4" />
       </button>
-      <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className={selectClass}>
-        <option value="sm">Small</option>
-        <option value="md">Paragraph</option>
-        <option value="lg">Heading</option>
-        <option value="xl">Title</option>
-      </select>
-      <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className={selectClass}>
-        <option value="Inter">Inter</option>
-        <option value="Arial">Arial</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Times New Roman">Times</option>
-      </select>
-      <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-8 w-9 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] p-1" title="Text color" />
-      <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className={`${buttonClass} font-bold`}>B</button>
-      <button type="button" onClick={() => onChange({ italic: !block.italic })} className={`${buttonClass} italic`}>I</button>
-      <button type="button" onClick={() => onChange({ underline: !block.underline })} className={`${buttonClass} underline`}>U</button>
-      <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className={selectClass}>
-        <option value="left">Left</option>
-        <option value="center">Center</option>
-        <option value="right">Right</option>
-      </select>
-      <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className={selectClass}>
-        <option value="full">Full</option>
-        <option value="wide">Wide</option>
-        <option value="half">Half</option>
-      </select>
+      {block.type === "text" && (
+        <>
+          <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className={selectClass}>
+            <option value="sm">Small</option>
+            <option value="md">Paragraph</option>
+            <option value="lg">Heading</option>
+            <option value="xl">Title</option>
+          </select>
+          <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className={selectClass}>
+            <option value="Inter">Inter</option>
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Times New Roman">Times</option>
+          </select>
+          <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-8 w-9 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] p-1" title="Text color" />
+          <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className={`${buttonClass} font-bold`}>B</button>
+          <button type="button" onClick={() => onChange({ italic: !block.italic })} className={`${buttonClass} italic`}>I</button>
+          <button type="button" onClick={() => onChange({ underline: !block.underline })} className={`${buttonClass} underline`}>U</button>
+          <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className={selectClass}>
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+          <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className={selectClass}>
+            <option value="full">Full</option>
+            <option value="wide">Wide</option>
+            <option value="half">Half</option>
+          </select>
+        </>
+      )}
       <button type="button" onClick={onDelete} className={`${buttonClass} text-rose-500`}>x</button>
     </div>
   );
@@ -1686,9 +1712,11 @@ function UploadBox({
 
   return (
     <div>
-      <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
-        {label}
-      </label>
+      {label && (
+        <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
+          {label}
+        </label>
+      )}
       <label className="block rounded-xl border border-dashed border-[color:var(--line-strong)] px-4 py-6 text-center text-[var(--muted-2)] text-sm hover:bg-[color:var(--hover)] cursor-pointer">
         <input
           type="file"
