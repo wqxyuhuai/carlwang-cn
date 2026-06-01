@@ -48,7 +48,11 @@ export function canUploadToOss(settings?: OssSettings) {
   );
 }
 
-export async function uploadToOss(file: File, settings?: OssSettings) {
+export async function uploadToOss(
+  file: File,
+  settings?: OssSettings,
+  pathPrefix = "",
+) {
   if (!canUploadToOss(settings) || !settings) {
     throw new Error("Aliyun OSS is not configured.");
   }
@@ -56,7 +60,8 @@ export async function uploadToOss(file: File, settings?: OssSettings) {
   const bucket = settings.bucket.trim();
   const endpoint = normalizeEndpoint(settings.endpoint);
   const directory = cleanPart(settings.directory || "uploads");
-  const objectKey = `${directory}/${randomName(file)}`;
+  const prefix = cleanPart(pathPrefix);
+  const objectKey = [directory, prefix, randomName(file)].filter(Boolean).join("/");
   const contentType = file.type || "application/octet-stream";
   const date = new Date().toUTCString();
   const ossHeaders = `x-oss-date:${date}\nx-oss-object-acl:public-read\n`;

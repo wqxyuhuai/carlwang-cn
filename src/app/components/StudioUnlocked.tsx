@@ -407,6 +407,8 @@ function ProjectForm({
     featured: !!initial?.featured,
     sortOrder: initial?.sortOrder ?? 999,
   });
+  const uploadSlug = slugify(f.slug || f.title || initial?.id || "untitled-project");
+  const uploadBase = `work/${uploadSlug}`;
   return (
     <form
       onSubmit={(e) => {
@@ -439,12 +441,13 @@ function ProjectForm({
           <RichContentEditor
             label="Project body"
             blocks={f.richContent}
+            uploadPathPrefix={`${uploadBase}/body`}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
           />
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={`${uploadBase}/cover`} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
@@ -603,6 +606,8 @@ function LabForm({
     coverImage: initial?.coverImage ?? "",
     published: !initial?.hidden,
   });
+  const uploadSlug = slugify(f.slug || f.title || initial?.id || "untitled-lab");
+  const uploadBase = `lab/${uploadSlug}`;
   return (
     <form
       onSubmit={(e) => {
@@ -632,12 +637,13 @@ function LabForm({
           <RichContentEditor
             label="Lab body"
             blocks={f.richContent}
+            uploadPathPrefix={`${uploadBase}/body`}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
           />
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={`${uploadBase}/cover`} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
@@ -1250,7 +1256,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
         <div className="grid grid-cols-2 gap-4">
           <Field label="Bucket" value={oss.bucket} onChange={(v) => setS({ ...s, oss: { ...oss, bucket: v } })} placeholder="your-bucket-name" />
           <Field label="Endpoint" value={oss.endpoint} onChange={(v) => setS({ ...s, oss: { ...oss, endpoint: v } })} placeholder="oss-cn-shanghai.aliyuncs.com" />
-          <Field label="Directory" value={oss.directory} onChange={(v) => setS({ ...s, oss: { ...oss, directory: v } })} placeholder="uploads" />
+          <Field label="Base directory" value={oss.directory} onChange={(v) => setS({ ...s, oss: { ...oss, directory: v } })} placeholder="uploads" />
           <Field label="Public base URL" value={oss.publicBaseUrl} onChange={(v) => setS({ ...s, oss: { ...oss, publicBaseUrl: v } })} placeholder="optional custom domain" />
           <Field label="AccessKey ID" value={oss.accessKeyId} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeyId: v } })} />
           <Field label="AccessKey Secret" type="password" value={oss.accessKeySecret} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeySecret: v } })} />
@@ -1309,10 +1315,12 @@ function textToRichBlocks(value?: string): RichBlock[] {
 function RichContentEditor({
   label,
   blocks,
+  uploadPathPrefix,
   onChange,
 }: {
   label: string;
   blocks: RichBlock[];
+  uploadPathPrefix: string;
   onChange: (blocks: RichBlock[]) => void;
 }) {
   const [history, setHistory] = useState<RichBlock[][]>([]);
@@ -1463,6 +1471,7 @@ function RichContentEditor({
                   <UploadBox
                     label=""
                     accept="image/*"
+                    pathPrefix={`${uploadPathPrefix}/images`}
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
                 )}
@@ -1478,6 +1487,7 @@ function RichContentEditor({
                   <UploadBox
                     label=""
                     accept="video/*"
+                    pathPrefix={`${uploadPathPrefix}/videos`}
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
                 )}
@@ -1716,11 +1726,13 @@ function UploadBox({
   label,
   accept,
   multiple,
+  pathPrefix,
   onFiles,
 }: {
   label: string;
   accept?: string;
   multiple?: boolean;
+  pathPrefix?: string;
   onFiles?: (files: string[]) => void;
 }) {
   const [status, setStatus] = useState("");
@@ -1732,7 +1744,7 @@ function UploadBox({
     setStatus("Uploading...");
     try {
       const dataUrls = canUploadToOss(content.settings.oss)
-        ? await Promise.all(files.map((file) => uploadToOss(file, content.settings.oss)))
+        ? await Promise.all(files.map((file) => uploadToOss(file, content.settings.oss, pathPrefix)))
         : await Promise.all(
             files.map(
               (file) =>
