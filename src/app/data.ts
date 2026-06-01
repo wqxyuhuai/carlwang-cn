@@ -5,6 +5,11 @@ export type RichBlock = {
   align?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg" | "xl";
   width?: "full" | "wide" | "half";
+  color?: string;
+  fontFamily?: string;
+  weight?: "normal" | "medium" | "bold";
+  italic?: boolean;
+  underline?: boolean;
 };
 
 export type Project = {

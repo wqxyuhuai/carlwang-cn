@@ -141,18 +141,26 @@ function textToRichBlocks(value: string): RichBlock[] {
 
 function RichContentView({ blocks }: { blocks: RichBlock[] }) {
   return (
-    <div className="space-y-8">
+    <div>
       {blocks.map((block) => {
         const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
-        const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[780px]" : "w-full";
+        const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
         const size =
           block.size === "xl"
-            ? "text-4xl"
+            ? "text-5xl"
             : block.size === "lg"
-              ? "text-2xl"
+              ? "text-3xl"
               : block.size === "sm"
                 ? "text-base"
-                : "text-lg";
+                : "text-xl";
+        const style = {
+          color: block.color,
+          fontFamily: block.fontFamily,
+          fontWeight: block.weight === "bold" ? 700 : block.weight === "medium" ? 500 : 400,
+          fontStyle: block.italic ? "italic" : undefined,
+          textDecoration: block.underline ? "underline" : undefined,
+          lineHeight: 1.75,
+        };
 
         if (!block.value) return null;
         if (block.type === "image") {
@@ -161,7 +169,7 @@ function RichContentView({ blocks }: { blocks: RichBlock[] }) {
               key={block.id}
               src={block.value}
               alt=""
-              className={`${width} ${align} media-rounded object-cover`}
+              className={`${width} ${align} object-cover`}
             />
           );
         }
@@ -171,14 +179,15 @@ function RichContentView({ blocks }: { blocks: RichBlock[] }) {
               key={block.id}
               src={block.value}
               controls
-              className={`${width} ${align} aspect-video object-cover media-rounded`}
+              className={`${width} ${align} aspect-video object-cover`}
             />
           );
         }
         return (
           <p
             key={block.id}
-            className={`${width} ${align} ${size} text-[var(--fg-2)] leading-relaxed`}
+            className={`${width} ${align} ${size} whitespace-pre-wrap`}
+            style={style}
           >
             {block.value}
           </p>

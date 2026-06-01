@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import type { CSSProperties } from "react";
 import {
   Plus,
   Edit3,
@@ -18,6 +19,7 @@ import {
   Image as ImageIcon,
   Type,
   Video,
+  GripVertical,
 } from "lucide-react";
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
@@ -438,28 +440,16 @@ function ProjectForm({
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <div>
-            <div className="text-[var(--fg)] font-semibold">Project properties</div>
-            <div className="text-[var(--muted)] text-sm mt-1">
-              Cover, publishing, and discovery fields.
-            </div>
-          </div>
-          <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
           <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-          <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Category" value={f.category} onChange={(v) => setF({ ...f, category: v })} />
             <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
           </div>
           <Field label="Role" value={f.role} onChange={(v) => setF({ ...f, role: v })} />
-          <Textarea label="Short Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
-          <Field label="External URL" value={f.externalUrl} onChange={(v) => setF({ ...f, externalUrl: v })} placeholder="https://" />
-          <Field label="Video URL" value={f.videoUrl} onChange={(v) => setF({ ...f, videoUrl: v })} placeholder="https:// or uploaded video" />
-          <UploadBox label="Upload video" accept="video/*" onFiles={(files) => setF({ ...f, videoUrl: files[0] ?? f.videoUrl })} />
-          <UploadBox label="Gallery images" accept="image/*" multiple onFiles={(files) => setF({ ...f, galleryImages: [...f.galleryImages, ...files] })} />
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Status"
@@ -643,18 +633,11 @@ function LabForm({
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <div>
-            <div className="text-[var(--fg)] font-semibold">Lab properties</div>
-            <div className="text-[var(--muted)] text-sm mt-1">
-              Cover, links, state, and stack.
-            </div>
-          </div>
-          <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
           <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-          <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Type"
@@ -669,7 +652,6 @@ function LabForm({
               onChange={(v) => setF({ ...f, status: v })}
             />
           </div>
-          <Textarea label="Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
           <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
           <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
           <Field label="Tech Stack" value={f.techStack} onChange={(v) => setF({ ...f, techStack: v })} />
@@ -1305,6 +1287,20 @@ function RichContentEditor({
   const addBlock = (type: RichBlock["type"]) => onChange([...blocks, createRichBlock(type)]);
   const removeBlock = (id: string) =>
     onChange(blocks.length > 1 ? blocks.filter((block) => block.id !== id) : blocks);
+  const moveBlock = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= blocks.length) return;
+    const next = [...blocks];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  };
+  const readClipboardImage = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   const addItems = [
     { type: "image" as const, label: "Image", icon: ImageIcon },
     { type: "text" as const, label: "Text", icon: Type },
@@ -1312,12 +1308,29 @@ function RichContentEditor({
   ];
 
   return (
-    <div>
+    <div
+      onPaste={async (event) => {
+        const files = Array.from(event.clipboardData.files).filter((file) =>
+          file.type.startsWith("image/"),
+        );
+        if (!files.length) return;
+        event.preventDefault();
+        const images = await Promise.all(files.map(readClipboardImage));
+        onChange([
+          ...blocks,
+          ...images.map((value) => ({
+            ...createRichBlock("image"),
+            value,
+            width: "full" as const,
+          })),
+        ]);
+      }}
+    >
       <div className="flex items-center justify-between mb-5">
         <div>
           <label className="text-[var(--fg)] font-semibold block">{label}</label>
           <div className="text-[var(--muted)] text-sm mt-1">
-            Add visual blocks, then tune width, size, and alignment per block.
+            Edit directly on the canvas. Paste images here, or drag blocks to reorder.
           </div>
         </div>
         <div className="flex gap-2">
@@ -1337,97 +1350,61 @@ function RichContentEditor({
         {blocks.map((block, index) => (
           <div
             key={block.id}
-            className="rounded-xl border border-[color:var(--line)] bg-[var(--app-bg)] p-4 space-y-3"
+            draggable
+            onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              moveBlock(Number(event.dataTransfer.getData("text/plain")), index);
+            }}
+            className="group relative bg-[var(--app-bg)] transition-shadow hover:ring-1 hover:ring-[color:var(--accent)]/45"
           >
-            <div className="flex items-center gap-3">
-              <span className="h-7 px-2.5 rounded-full bg-[color:var(--surface-2)] text-[var(--fg-2)] text-xs inline-flex items-center">
-                {index + 1}. {block.type}
-              </span>
-              <div className="ml-auto flex gap-2">
-                <select
-                  value={block.align ?? "left"}
-                  onChange={(event) => updateBlock(block.id, { align: event.target.value as RichBlock["align"] })}
-                  className="h-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)]"
-                >
-                  <option value="left">Left</option>
-                  <option value="center">Center</option>
-                  <option value="right">Right</option>
-                </select>
-                <select
-                  value={block.size ?? "md"}
-                  onChange={(event) => updateBlock(block.id, { size: event.target.value as RichBlock["size"] })}
-                  className="h-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)]"
-                >
-                  <option value="sm">Small</option>
-                  <option value="md">Medium</option>
-                  <option value="lg">Large</option>
-                  <option value="xl">Title</option>
-                </select>
-                <select
-                  value={block.width ?? "full"}
-                  onChange={(event) => updateBlock(block.id, { width: event.target.value as RichBlock["width"] })}
-                  className="h-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)]"
-                >
-                  <option value="full">Full</option>
-                  <option value="wide">Text width</option>
-                  <option value="half">Half</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeBlock(block.id)}
-                  className="h-8 w-8 rounded-lg text-rose-500 hover:bg-rose-500/10"
-                  title="Delete block"
-                >
-                  ×
-                </button>
+            <div className="absolute -left-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="h-9 w-9 rounded-full bg-[var(--fg)] text-[var(--app-bg)] grid place-items-center cursor-grab shadow-lg">
+                <GripVertical className="w-4 h-4" />
               </div>
             </div>
+            <BlockToolbar block={block} onChange={(patch) => updateBlock(block.id, patch)} onDelete={() => removeBlock(block.id)} />
 
             {block.type === "text" && (
-              <textarea
-                rows={7}
-                value={block.value}
-                onChange={(event) => updateBlock(block.id, { value: event.target.value })}
-                placeholder="Write text here..."
-                className="w-full bg-[color:var(--surface)] border border-[color:var(--line)] rounded-xl px-4 py-3 text-[var(--fg)] outline-none focus:border-[color:var(--accent)]/40"
-              />
+              <div
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={(event) => updateBlock(block.id, { value: event.currentTarget.innerText })}
+                className={`${richBlockClass(block)} min-h-[56px] outline-none whitespace-pre-wrap px-2 py-3`}
+                style={richBlockStyle(block)}
+              >
+                {block.value}
+              </div>
             )}
 
             {block.type === "image" && (
-              <div className="space-y-3">
+              <div className={`${richBlockClass(block)} px-0`} style={richBlockStyle(block)}>
                 {block.value && (
-                  <img src={block.value} alt="" className="aspect-video w-full rounded-lg object-cover border border-[color:var(--line)]" />
+                  <img src={block.value} alt="" className="w-full object-cover" />
                 )}
-                <UploadBox
-                  label="Image"
-                  accept="image/*"
-                  onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
-                />
-                <Field
-                  label="Or image URL"
-                  value={block.value}
-                  onChange={(value) => updateBlock(block.id, { value })}
-                  placeholder="https://"
-                />
+                {!block.value && (
+                  <UploadBox
+                    label="Image"
+                    accept="image/*"
+                    onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
+                  />
+                )}
               </div>
             )}
 
             {block.type === "video" && (
-              <div className="space-y-3">
+              <div className={`${richBlockClass(block)} px-0`} style={richBlockStyle(block)}>
                 {block.value && (
-                  <video src={block.value} controls className="aspect-video w-full rounded-lg object-cover border border-[color:var(--line)]" />
+                  <video src={block.value} controls className="aspect-video w-full object-cover" />
                 )}
-                <UploadBox
-                  label="Video"
-                  accept="video/*"
-                  onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
-                />
-                <Field
-                  label="Or video URL"
-                  value={block.value}
-                  onChange={(value) => updateBlock(block.id, { value })}
-                  placeholder="https:// or uploaded video"
-                />
+                {!block.value && (
+                  <UploadBox
+                    label="Video"
+                    accept="video/*"
+                    onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -1435,6 +1412,67 @@ function RichContentEditor({
       </div>
     </div>
   );
+}
+
+function BlockToolbar({
+  block,
+  onChange,
+  onDelete,
+}: {
+  block: RichBlock;
+  onChange: (patch: Partial<RichBlock>) => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="absolute right-3 top-3 z-20 flex items-center gap-1 rounded-lg bg-[#171717] px-2 py-1.5 text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+      <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+        <option value="sm">Small</option>
+        <option value="md">Paragraph</option>
+        <option value="lg">Heading</option>
+        <option value="xl">Title</option>
+      </select>
+      <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className="h-8 bg-transparent px-2 text-sm outline-none">
+        <option value="Inter">Inter</option>
+        <option value="Arial">Arial</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Times New Roman">Times</option>
+      </select>
+      <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-7 w-8 bg-transparent" title="Text color" />
+      <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className="h-8 w-8 rounded hover:bg-white/10 font-bold">B</button>
+      <button type="button" onClick={() => onChange({ italic: !block.italic })} className="h-8 w-8 rounded hover:bg-white/10 italic">I</button>
+      <button type="button" onClick={() => onChange({ underline: !block.underline })} className="h-8 w-8 rounded hover:bg-white/10 underline">U</button>
+      <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+        <option value="left">Left</option>
+        <option value="center">Center</option>
+        <option value="right">Right</option>
+      </select>
+      <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+        <option value="full">Full</option>
+        <option value="wide">Wide</option>
+        <option value="half">Half</option>
+      </select>
+      <button type="button" onClick={onDelete} className="h-8 w-8 rounded text-rose-300 hover:bg-white/10">x</button>
+    </div>
+  );
+}
+
+function richBlockClass(block: RichBlock) {
+  const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
+  const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
+  const size =
+    block.size === "xl" ? "text-5xl" : block.size === "lg" ? "text-3xl" : block.size === "sm" ? "text-base" : "text-xl";
+  return `${width} ${align} ${size}`;
+}
+
+function richBlockStyle(block: RichBlock): CSSProperties {
+  return {
+    color: block.color,
+    fontFamily: block.fontFamily,
+    fontWeight: block.weight === "bold" ? 700 : block.weight === "medium" ? 500 : 400,
+    fontStyle: block.italic ? "italic" : undefined,
+    textDecoration: block.underline ? "underline" : undefined,
+    lineHeight: 1.75,
+  };
 }
 
 function IconBtn({
