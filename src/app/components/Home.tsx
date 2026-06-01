@@ -108,7 +108,15 @@ export function Home({
               >
                 <div className="card overflow-hidden text-left">
                   <div className="relative aspect-[16/11] overflow-hidden">
-                    <CoverArt index={i} />
+                    {p.coverImage ? (
+                      <img
+                        src={p.coverImage}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <CoverArt index={i} />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--app-bg)] via-transparent to-transparent opacity-60" />
                     <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--fg)] text-[var(--app-bg)] grid place-items-center opacity-0 group-hover:opacity-100 transition-all">
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -149,28 +157,36 @@ export function Home({
                   className="reveal-up group flex-shrink-0 w-[360px] -ml-12 first:ml-0 hover:z-10 transition-all duration-300 hover:scale-105"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  <div className="card p-6 text-left">
-                    <div className="flex items-center gap-2 mb-6">
-                      <span className="w-8 h-8 rounded-lg bg-[color:var(--accent-soft)] grid place-items-center text-[var(--accent)]">
-                        <Icon className="w-4 h-4" />
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-[color:var(--hover)] text-[var(--fg-2)] text-xs">
-                        {it.type}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${statusColor(
-                          it.status,
-                        )}`}
-                      >
-                        {it.status}
-                      </span>
+                  <div className="card overflow-hidden text-left">
+                    <div className="relative aspect-[16/11] overflow-hidden">
+                      {it.coverImage ? (
+                        <img
+                          src={it.coverImage}
+                          alt=""
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <>
+                          <div
+                            className="absolute inset-0 opacity-70"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px)",
+                              backgroundSize: "32px 32px",
+                            }}
+                          />
+                          <div className="absolute inset-0 grid place-items-center text-[var(--accent)]">
+                            <Icon className="w-8 h-8" />
+                          </div>
+                        </>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--app-bg)] via-transparent to-transparent opacity-60" />
                     </div>
-                    <div className="display text-[var(--fg)] mb-2" style={{ fontSize: 20 }}>
-                      {it.title}
+                    <div className="p-6">
+                      <div className="display text-[var(--fg)]" style={{ fontSize: 20 }}>
+                        {it.title}
+                      </div>
                     </div>
-                    <p className="text-[var(--muted)] text-sm leading-relaxed line-clamp-2">
-                      {it.description}
-                    </p>
                   </div>
                 </button>
               );
@@ -260,13 +276,6 @@ function SectionHeader({
       )}
     </div>
   );
-}
-
-function statusColor(s: string) {
-  if (s === "Live")
-    return "bg-[color:var(--accent-soft)] text-[var(--accent)]";
-  if (s === "Building") return "bg-amber-400/15 text-amber-500";
-  return "bg-[color:var(--surface-2)] text-[var(--muted)]";
 }
 
 /* ------------------------------------------------------------- */

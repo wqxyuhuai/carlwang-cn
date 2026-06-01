@@ -57,36 +57,6 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-8">
-        <div className="aspect-[16/9] media-rounded relative">
-          {item.coverImage ? (
-            <img src={item.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <>
-              <div
-                className="absolute inset-0 opacity-50"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.06) 1px,transparent 1px)",
-                  backgroundSize: "40px 40px",
-                }}
-              />
-              <div className="absolute inset-10 grid grid-cols-7 gap-2">
-                {Array.from({ length: 35 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-md border border-[color:var(--line)]"
-                    style={{
-                      background: `rgba(182,207,116,${0.08 + (i % 7) * 0.05})`,
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
       <section className="mx-auto max-w-[1180px] px-8 py-16">
         <div className="space-y-8">
           <RichContentView blocks={blocks} />

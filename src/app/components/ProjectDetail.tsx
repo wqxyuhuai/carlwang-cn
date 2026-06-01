@@ -2,7 +2,6 @@ import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
 import type { RichBlock } from "../data";
-import { CoverArt } from "./CoverArt";
 
 export function ProjectDetail({
   id,
@@ -59,16 +58,6 @@ export function ProjectDetail({
             Open Project <ExternalLink className="w-4 h-4" />
           </a>
         )}
-      </section>
-
-      <section className="mx-auto max-w-[1440px] px-8">
-        <div className="relative aspect-[16/9] media-rounded">
-          {project.coverImage ? (
-            <img src={project.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <CoverArt index={idx} />
-          )}
-        </div>
       </section>
 
       <section className="mx-auto max-w-[1180px] px-8 py-16">
