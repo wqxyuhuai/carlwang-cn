@@ -20,6 +20,9 @@ import {
   Type,
   Video,
   GripVertical,
+  Undo2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
@@ -1282,17 +1285,28 @@ function RichContentEditor({
   blocks: RichBlock[];
   onChange: (blocks: RichBlock[]) => void;
 }) {
+  const [history, setHistory] = useState<RichBlock[][]>([]);
+  const commitChange = (next: RichBlock[]) => {
+    setHistory((items) => [...items.slice(-19), blocks]);
+    onChange(next);
+  };
+  const undo = () => {
+    const previous = history[history.length - 1];
+    if (!previous) return;
+    setHistory((items) => items.slice(0, -1));
+    onChange(previous);
+  };
   const updateBlock = (id: string, patch: Partial<RichBlock>) =>
-    onChange(blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
-  const addBlock = (type: RichBlock["type"]) => onChange([...blocks, createRichBlock(type)]);
+    commitChange(blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
+  const addBlock = (type: RichBlock["type"]) => commitChange([...blocks, createRichBlock(type)]);
   const removeBlock = (id: string) =>
-    onChange(blocks.length > 1 ? blocks.filter((block) => block.id !== id) : blocks);
+    commitChange(blocks.length > 1 ? blocks.filter((block) => block.id !== id) : blocks);
   const moveBlock = (from: number, to: number) => {
     if (from === to || to < 0 || to >= blocks.length) return;
     const next = [...blocks];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
-    onChange(next);
+    commitChange(next);
   };
   const readClipboardImage = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -1330,10 +1344,18 @@ function RichContentEditor({
         <div>
           <label className="text-[var(--fg)] font-semibold block">{label}</label>
           <div className="text-[var(--muted)] text-sm mt-1">
-            Edit directly on the canvas. Paste images here, or drag blocks to reorder.
+            Edit directly on the canvas. Paste images here, then use Up / Down to reorder blocks.
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!history.length}
+            className="h-10 px-3 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] text-[var(--fg)] text-sm hover:bg-[color:var(--hover)] disabled:opacity-40 disabled:hover:bg-[var(--app-bg)] inline-flex items-center gap-2"
+          >
+            <Undo2 className="w-4 h-4" /> Undo
+          </button>
           {addItems.map(({ type, label: itemLabel, icon: Icon }) => (
             <button
               key={type}
@@ -1350,28 +1372,30 @@ function RichContentEditor({
         {blocks.map((block, index) => (
           <div
             key={block.id}
-            draggable
-            onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              moveBlock(Number(event.dataTransfer.getData("text/plain")), index);
-            }}
-            className="group relative bg-[var(--app-bg)] transition-shadow hover:ring-1 hover:ring-[color:var(--accent)]/45"
+            className="group bg-[var(--app-bg)] border border-[color:var(--line)] transition-shadow hover:border-[color:var(--accent)]/60"
           >
-            <div className="absolute -left-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="h-9 w-9 rounded-full bg-[var(--fg)] text-[var(--app-bg)] grid place-items-center cursor-grab shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--line)] bg-[color:var(--surface-2)] px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
                 <GripVertical className="w-4 h-4" />
+                <span>{index + 1}. {block.type}</span>
               </div>
+              <BlockToolbar
+                block={block}
+                onChange={(patch) => updateBlock(block.id, patch)}
+                onDelete={() => removeBlock(block.id)}
+                onMoveUp={() => moveBlock(index, index - 1)}
+                onMoveDown={() => moveBlock(index, index + 1)}
+                canMoveUp={index > 0}
+                canMoveDown={index < blocks.length - 1}
+              />
             </div>
-            <BlockToolbar block={block} onChange={(patch) => updateBlock(block.id, patch)} onDelete={() => removeBlock(block.id)} />
 
             {block.type === "text" && (
               <div
                 contentEditable
                 suppressContentEditableWarning
                 onBlur={(event) => updateBlock(block.id, { value: event.currentTarget.innerText })}
-                className={`${richBlockClass(block)} min-h-[56px] outline-none whitespace-pre-wrap px-2 py-3`}
+                className={`${richBlockClass(block)} min-h-[56px] outline-none whitespace-pre-wrap px-3 py-4`}
                 style={richBlockStyle(block)}
               >
                 {block.value}
@@ -1418,40 +1442,58 @@ function BlockToolbar({
   block,
   onChange,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   block: RichBlock;
   onChange: (patch: Partial<RichBlock>) => void;
   onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }) {
+  const selectClass =
+    "h-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)] outline-none focus:border-[color:var(--accent)]/60";
+  const buttonClass =
+    "h-8 min-w-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)] hover:bg-[color:var(--hover)] disabled:opacity-35 disabled:hover:bg-[var(--app-bg)]";
   return (
-    <div className="absolute right-3 top-3 z-20 flex items-center gap-1 rounded-lg bg-[#171717] px-2 py-1.5 text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
-      <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+    <div className="flex flex-wrap items-center justify-end gap-1">
+      <button type="button" onClick={onMoveUp} disabled={!canMoveUp} className={buttonClass} title="Move up">
+        <ArrowUp className="w-4 h-4" />
+      </button>
+      <button type="button" onClick={onMoveDown} disabled={!canMoveDown} className={buttonClass} title="Move down">
+        <ArrowDown className="w-4 h-4" />
+      </button>
+      <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className={selectClass}>
         <option value="sm">Small</option>
         <option value="md">Paragraph</option>
         <option value="lg">Heading</option>
         <option value="xl">Title</option>
       </select>
-      <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className="h-8 bg-transparent px-2 text-sm outline-none">
+      <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className={selectClass}>
         <option value="Inter">Inter</option>
         <option value="Arial">Arial</option>
         <option value="Georgia">Georgia</option>
         <option value="Times New Roman">Times</option>
       </select>
-      <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-7 w-8 bg-transparent" title="Text color" />
-      <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className="h-8 w-8 rounded hover:bg-white/10 font-bold">B</button>
-      <button type="button" onClick={() => onChange({ italic: !block.italic })} className="h-8 w-8 rounded hover:bg-white/10 italic">I</button>
-      <button type="button" onClick={() => onChange({ underline: !block.underline })} className="h-8 w-8 rounded hover:bg-white/10 underline">U</button>
-      <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+      <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-8 w-9 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] p-1" title="Text color" />
+      <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className={`${buttonClass} font-bold`}>B</button>
+      <button type="button" onClick={() => onChange({ italic: !block.italic })} className={`${buttonClass} italic`}>I</button>
+      <button type="button" onClick={() => onChange({ underline: !block.underline })} className={`${buttonClass} underline`}>U</button>
+      <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className={selectClass}>
         <option value="left">Left</option>
         <option value="center">Center</option>
         <option value="right">Right</option>
       </select>
-      <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className="h-8 bg-transparent px-2 text-sm outline-none">
+      <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className={selectClass}>
         <option value="full">Full</option>
         <option value="wide">Wide</option>
         <option value="half">Half</option>
       </select>
-      <button type="button" onClick={onDelete} className="h-8 w-8 rounded text-rose-300 hover:bg-white/10">x</button>
+      <button type="button" onClick={onDelete} className={`${buttonClass} text-rose-500`}>x</button>
     </div>
   );
 }
