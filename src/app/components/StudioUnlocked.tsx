@@ -27,6 +27,7 @@ import {
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
 import type { LabItem, Project, RichBlock } from "../data";
+import { canUploadToOss, uploadToOss } from "../ossUpload";
 
 type Tab =
   | "overview"
@@ -1194,6 +1195,15 @@ function QRPreview({
 function SettingsTab({ toast }: { toast: (m: string) => void }) {
   const { content, saveSettings } = useContent();
   const [s, setS] = useState<SiteSettings>(content.settings);
+  const oss = s.oss ?? {
+    enabled: false,
+    bucket: "",
+    endpoint: "",
+    directory: "uploads",
+    accessKeyId: "",
+    accessKeySecret: "",
+    publicBaseUrl: "",
+  };
   return (
     <form
       onSubmit={(e) => {
@@ -1225,6 +1235,26 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
       </div>
       <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6">
         <Field label="Footer text" value={s.footer} onChange={(v) => setS({ ...s, footer: v })} />
+      </div>
+      <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+            Aliyun OSS Storage
+          </div>
+          <Toggle
+            label="Enable"
+            checked={oss.enabled}
+            onChange={(enabled) => setS({ ...s, oss: { ...oss, enabled } })}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Bucket" value={oss.bucket} onChange={(v) => setS({ ...s, oss: { ...oss, bucket: v } })} placeholder="your-bucket-name" />
+          <Field label="Endpoint" value={oss.endpoint} onChange={(v) => setS({ ...s, oss: { ...oss, endpoint: v } })} placeholder="oss-cn-shanghai.aliyuncs.com" />
+          <Field label="Directory" value={oss.directory} onChange={(v) => setS({ ...s, oss: { ...oss, directory: v } })} placeholder="uploads" />
+          <Field label="Public base URL" value={oss.publicBaseUrl} onChange={(v) => setS({ ...s, oss: { ...oss, publicBaseUrl: v } })} placeholder="optional custom domain" />
+          <Field label="AccessKey ID" value={oss.accessKeyId} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeyId: v } })} />
+          <Field label="AccessKey Secret" type="password" value={oss.accessKeySecret} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeySecret: v } })} />
+        </div>
       </div>
       <div className="col-span-2 flex justify-end">
         <button
@@ -1574,11 +1604,13 @@ function Field({
   value,
   onChange,
   placeholder,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  type?: string;
 }) {
   return (
     <div>
@@ -1586,6 +1618,7 @@ function Field({
         {label}
       </label>
       <input
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -1691,23 +1724,31 @@ function UploadBox({
   onFiles?: (files: string[]) => void;
 }) {
   const [status, setStatus] = useState("");
+  const { content } = useContent();
 
   const readFiles = async (fileList: FileList | null) => {
     if (!fileList?.length) return;
     const files = Array.from(fileList);
-    const dataUrls = await Promise.all(
-      files.map(
-        (file) =>
-          new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(file);
-          }),
-      ),
-    );
-    setStatus(`${files.length} file${files.length > 1 ? "s" : ""} attached`);
-    onFiles?.(dataUrls);
+    setStatus("Uploading...");
+    try {
+      const dataUrls = canUploadToOss(content.settings.oss)
+        ? await Promise.all(files.map((file) => uploadToOss(file, content.settings.oss)))
+        : await Promise.all(
+            files.map(
+              (file) =>
+                new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(String(reader.result));
+                  reader.onerror = () => reject(reader.error);
+                  reader.readAsDataURL(file);
+                }),
+            ),
+          );
+      setStatus(`${files.length} file${files.length > 1 ? "s" : ""} attached`);
+      onFiles?.(dataUrls);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload failed");
+    }
   };
 
   return (

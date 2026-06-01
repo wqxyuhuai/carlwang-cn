@@ -51,6 +51,17 @@ export type SiteSettings = {
   behance: string;
   linkedin: string;
   footer: string;
+  oss?: OssSettings;
+};
+
+export type OssSettings = {
+  enabled: boolean;
+  bucket: string;
+  endpoint: string;
+  directory: string;
+  accessKeyId: string;
+  accessKeySecret: string;
+  publicBaseUrl: string;
 };
 
 export type SiteContent = {
@@ -90,6 +101,15 @@ const defaultSettings: SiteSettings = {
   behance: "https://www.behance.net/carl_wang",
   linkedin: "https://www.linkedin.cn/incareer/in/carl-wang-840656167/",
   footer: "© 2026 Carl Wang. Built with care.",
+  oss: {
+    enabled: false,
+    bucket: "",
+    endpoint: "",
+    directory: "uploads",
+    accessKeyId: "",
+    accessKeySecret: "",
+    publicBaseUrl: "",
+  },
 };
 
 const defaultLinks: ManagedLink[] = [
@@ -173,7 +193,14 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
       : defaultContent.capabilities,
     links: defaultContent.links,
     messages: value?.messages ?? defaultContent.messages,
-    settings: { ...defaultSettings, ...(value?.settings ?? {}) },
+    settings: {
+      ...defaultSettings,
+      ...(value?.settings ?? {}),
+      oss: {
+        ...defaultSettings.oss,
+        ...((value?.settings as SiteSettings | undefined)?.oss ?? {}),
+      },
+    },
   };
 }
 
