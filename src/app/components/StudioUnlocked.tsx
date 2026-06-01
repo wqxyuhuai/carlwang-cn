@@ -15,6 +15,9 @@ import {
   Pin,
   FileText,
   Lock,
+  Image as ImageIcon,
+  Type,
+  Video,
 } from "lucide-react";
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
@@ -423,40 +426,56 @@ function ProjectForm({
           sortOrder: f.sortOrder,
         });
       }}
-      className="space-y-4"
+      className="space-y-0"
     >
-      <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-      <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Category" value={f.category} onChange={(v) => setF({ ...f, category: v })} />
-        <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="min-h-[620px] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-5">
+          <RichContentEditor
+            label="Project body"
+            blocks={f.richContent}
+            onChange={(blocks) => setF({ ...f, richContent: blocks })}
+          />
+        </section>
+
+        <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
+          <div>
+            <div className="text-[var(--fg)] font-semibold">Project properties</div>
+            <div className="text-[var(--muted)] text-sm mt-1">
+              Cover, publishing, and discovery fields.
+            </div>
+          </div>
+          <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          {f.coverImage && (
+            <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
+          )}
+          <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
+          <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Category" value={f.category} onChange={(v) => setF({ ...f, category: v })} />
+            <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
+          </div>
+          <Field label="Role" value={f.role} onChange={(v) => setF({ ...f, role: v })} />
+          <Textarea label="Short Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
+          <Field label="External URL" value={f.externalUrl} onChange={(v) => setF({ ...f, externalUrl: v })} placeholder="https://" />
+          <Field label="Video URL" value={f.videoUrl} onChange={(v) => setF({ ...f, videoUrl: v })} placeholder="https:// or uploaded video" />
+          <UploadBox label="Upload video" accept="video/*" onFiles={(files) => setF({ ...f, videoUrl: files[0] ?? f.videoUrl })} />
+          <UploadBox label="Gallery images" accept="image/*" multiple onFiles={(files) => setF({ ...f, galleryImages: [...f.galleryImages, ...files] })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Status"
+              value={f.status}
+              options={["Published", "Hidden", "Draft"]}
+              onChange={(v) => setF({ ...f, status: v })}
+            />
+            <Toggle
+              label="Featured"
+              checked={f.featured}
+              onChange={(v) => setF({ ...f, featured: v })}
+            />
+          </div>
+        </aside>
       </div>
-      <Field label="Role" value={f.role} onChange={(v) => setF({ ...f, role: v })} />
-      <Textarea label="Short Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
-      <RichContentEditor
-        label="Detail editor"
-        blocks={f.richContent}
-        onChange={(blocks) => setF({ ...f, richContent: blocks })}
-      />
-      <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
-      <UploadBox label="Gallery images" accept="image/*" multiple onFiles={(files) => setF({ ...f, galleryImages: [...f.galleryImages, ...files] })} />
-      <Field label="Video URL" value={f.videoUrl} onChange={(v) => setF({ ...f, videoUrl: v })} placeholder="https:// or uploaded video" />
-      <UploadBox label="Upload video" accept="video/*" onFiles={(files) => setF({ ...f, videoUrl: files[0] ?? f.videoUrl })} />
-      <Field label="External URL" value={f.externalUrl} onChange={(v) => setF({ ...f, externalUrl: v })} placeholder="https://" />
-      <div className="grid grid-cols-2 gap-3">
-        <Select
-          label="Status"
-          value={f.status}
-          options={["Published", "Hidden", "Draft"]}
-          onChange={(v) => setF({ ...f, status: v })}
-        />
-        <Toggle
-          label="Featured"
-          checked={f.featured}
-          onChange={(v) => setF({ ...f, featured: v })}
-        />
-      </div>
-      <div className="flex justify-end gap-2 pt-4 border-t border-[color:var(--line)]">
+      <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-[color:var(--line)]">
         <button
           type="button"
           onClick={onCancel}
@@ -612,36 +631,52 @@ function LabForm({
           hidden: !f.published,
         });
       }}
-      className="space-y-4"
+      className="space-y-0"
     >
-      <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-      <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
-      <div className="grid grid-cols-2 gap-3">
-        <Select
-          label="Type"
-          value={f.type}
-          options={["GitHub", "Web Tools", "Mini Program", "Design Experiments", "Notes"]}
-          onChange={(v) => setF({ ...f, type: v })}
-        />
-        <Select
-          label="Status"
-          value={f.status}
-          options={["Live", "Building", "Idea", "Archived"]}
-          onChange={(v) => setF({ ...f, status: v })}
-        />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="min-h-[620px] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-5">
+          <RichContentEditor
+            label="Lab body"
+            blocks={f.richContent}
+            onChange={(blocks) => setF({ ...f, richContent: blocks })}
+          />
+        </section>
+
+        <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
+          <div>
+            <div className="text-[var(--fg)] font-semibold">Lab properties</div>
+            <div className="text-[var(--muted)] text-sm mt-1">
+              Cover, links, state, and stack.
+            </div>
+          </div>
+          <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          {f.coverImage && (
+            <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
+          )}
+          <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
+          <Field label="Slug" value={f.slug} onChange={(v) => setF({ ...f, slug: v })} placeholder="auto-generated" />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Type"
+              value={f.type}
+              options={["GitHub", "Web Tools", "Mini Program", "Design Experiments", "Notes"]}
+              onChange={(v) => setF({ ...f, type: v })}
+            />
+            <Select
+              label="Status"
+              value={f.status}
+              options={["Live", "Building", "Idea", "Archived"]}
+              onChange={(v) => setF({ ...f, status: v })}
+            />
+          </div>
+          <Textarea label="Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
+          <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
+          <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
+          <Field label="Tech Stack" value={f.techStack} onChange={(v) => setF({ ...f, techStack: v })} />
+          <Toggle label="Published" checked={f.published} onChange={(v) => setF({ ...f, published: v })} />
+        </aside>
       </div>
-      <Textarea label="Description" value={f.description} onChange={(v) => setF({ ...f, description: v })} />
-      <RichContentEditor
-        label="Detail editor"
-        blocks={f.richContent}
-        onChange={(blocks) => setF({ ...f, richContent: blocks })}
-      />
-      <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
-      <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
-      <Field label="Tech Stack" value={f.techStack} onChange={(v) => setF({ ...f, techStack: v })} />
-      <UploadBox label="Cover image" accept="image/*" onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
-      <Toggle label="Published" checked={f.published} onChange={(v) => setF({ ...f, published: v })} />
-      <div className="flex justify-end gap-2 pt-4 border-t border-[color:var(--line)]">
+      <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-[color:var(--line)]">
         <button
           type="button"
           onClick={onCancel}
@@ -1270,35 +1305,43 @@ function RichContentEditor({
   const addBlock = (type: RichBlock["type"]) => onChange([...blocks, createRichBlock(type)]);
   const removeBlock = (id: string) =>
     onChange(blocks.length > 1 ? blocks.filter((block) => block.id !== id) : blocks);
+  const addItems = [
+    { type: "image" as const, label: "Image", icon: ImageIcon },
+    { type: "text" as const, label: "Text", icon: Type },
+    { type: "video" as const, label: "Video", icon: Video },
+  ];
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase block">
-          {label}
-        </label>
-        <div className="flex gap-1">
-          {(["text", "image", "video"] as const).map((type) => (
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <label className="text-[var(--fg)] font-semibold block">{label}</label>
+          <div className="text-[var(--muted)] text-sm mt-1">
+            Add visual blocks, then tune width, size, and alignment per block.
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {addItems.map(({ type, label: itemLabel, icon: Icon }) => (
             <button
               key={type}
               type="button"
               onClick={() => addBlock(type)}
-              className="h-8 px-3 rounded-lg border border-[color:var(--line)] text-[var(--fg-2)] text-xs hover:bg-[color:var(--hover)]"
+              className="h-10 px-3 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] text-[var(--fg)] text-sm hover:bg-[color:var(--hover)] inline-flex items-center gap-2"
             >
-              + {type}
+              <Icon className="w-4 h-4" /> {itemLabel}
             </button>
           ))}
         </div>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {blocks.map((block, index) => (
           <div
             key={block.id}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-4 space-y-3"
+            className="rounded-xl border border-[color:var(--line)] bg-[var(--app-bg)] p-4 space-y-3"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
-                {index + 1} / {block.type}
+            <div className="flex items-center gap-3">
+              <span className="h-7 px-2.5 rounded-full bg-[color:var(--surface-2)] text-[var(--fg-2)] text-xs inline-flex items-center">
+                {index + 1}. {block.type}
               </span>
               <div className="ml-auto flex gap-2">
                 <select
@@ -1342,16 +1385,19 @@ function RichContentEditor({
 
             {block.type === "text" && (
               <textarea
-                rows={4}
+                rows={7}
                 value={block.value}
                 onChange={(event) => updateBlock(block.id, { value: event.target.value })}
                 placeholder="Write text here..."
-                className="w-full bg-[var(--app-bg)] border border-[color:var(--line)] rounded-xl px-4 py-3 text-[var(--fg)] outline-none focus:border-[color:var(--accent)]/40"
+                className="w-full bg-[color:var(--surface)] border border-[color:var(--line)] rounded-xl px-4 py-3 text-[var(--fg)] outline-none focus:border-[color:var(--accent)]/40"
               />
             )}
 
             {block.type === "image" && (
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {block.value && (
+                  <img src={block.value} alt="" className="aspect-video w-full rounded-lg object-cover border border-[color:var(--line)]" />
+                )}
                 <UploadBox
                   label="Image"
                   accept="image/*"
@@ -1367,7 +1413,10 @@ function RichContentEditor({
             )}
 
             {block.type === "video" && (
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {block.value && (
+                  <video src={block.value} controls className="aspect-video w-full rounded-lg object-cover border border-[color:var(--line)]" />
+                )}
                 <UploadBox
                   label="Video"
                   accept="video/*"
@@ -1589,7 +1638,7 @@ function SidePanel({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[720px] max-h-[86vh] bg-[var(--app-bg)] border border-[color:var(--line)] rounded-3xl overflow-y-auto shadow-2xl"
+        className="w-full max-w-[1320px] max-h-[88vh] bg-[var(--app-bg)] border border-[color:var(--line)] rounded-3xl overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-[color:var(--line)] flex items-center justify-between sticky top-0 bg-[color:var(--app-bg)]/95 backdrop-blur">

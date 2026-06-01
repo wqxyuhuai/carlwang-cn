@@ -10,6 +10,7 @@ import { About } from "./components/About";
 import { StudioLocked } from "./components/StudioLocked";
 import { StudioUnlocked } from "./components/StudioUnlocked";
 import { Loader } from "./components/Loader";
+import { useContent } from "./contentStore";
 
 export type Route =
   | "home"
@@ -24,6 +25,7 @@ export type Route =
 type Theme = "dark" | "light";
 
 export default function App() {
+  const { content } = useContent();
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string>("wattdesk");
   const [labId, setLabId] = useState<string>("gh-calendar");
@@ -40,6 +42,69 @@ export default function App() {
   });
   const glowRef = useRef<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
+
+  const findProjectBySlug = (slug: string) =>
+    content.projects.find((project) => (project.slug || project.id) === slug || project.id === slug);
+  const findLabBySlug = (slug: string) =>
+    content.labItems.find((item) => (item.slug || item.id) === slug || item.id === slug);
+  const projectPath = (id: string) => {
+    const project = content.projects.find((entry) => entry.id === id);
+    return `/work/${project?.slug || project?.id || id}`;
+  };
+  const labPath = (id: string) => {
+    const item = content.labItems.find((entry) => entry.id === id);
+    return `/lab/${item?.slug || item?.id || id}`;
+  };
+  const currentPath = (nextRoute: Route, nextProjectId = projectId, nextLabId = labId) => {
+    if (nextRoute === "work") return "/work";
+    if (nextRoute === "project") return projectPath(nextProjectId);
+    if (nextRoute === "lab") return "/lab";
+    if (nextRoute === "lab-detail") return labPath(nextLabId);
+    if (nextRoute === "about") return "/about";
+    if (nextRoute.startsWith("studio")) return "/studio";
+    return "/";
+  };
+  const syncFromPath = () => {
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    const segments = path.split("/").filter(Boolean);
+    const baseOffset = segments[0] === "carlwang-cn" ? 1 : 0;
+    const first = segments[baseOffset];
+    const second = segments[baseOffset + 1];
+
+    if (!first) {
+      setRoute("home");
+      return;
+    }
+    if (first === "work") {
+      if (second) {
+        const project = findProjectBySlug(second);
+        if (project) setProjectId(project.id);
+        setRoute("project");
+        return;
+      }
+      setRoute("work");
+      return;
+    }
+    if (first === "lab") {
+      if (second) {
+        const item = findLabBySlug(second);
+        if (item) setLabId(item.id);
+        setRoute("lab-detail");
+        return;
+      }
+      setRoute("lab");
+      return;
+    }
+    if (first === "about") {
+      setRoute("about");
+      return;
+    }
+    if (first === "studio") {
+      setRoute(studioUnlocked ? "studio-unlocked" : "studio-locked");
+      return;
+    }
+    setRoute("home");
+  };
 
   // mouse-follow cursor glow
   useEffect(() => {
@@ -71,6 +136,18 @@ export default function App() {
     document.documentElement.className = theme === "dark" ? "theme-dark" : "theme-light";
   }, [theme]);
 
+  useEffect(() => {
+    const storedPath = sessionStorage.getItem("cw-spa-path");
+    if (storedPath) {
+      sessionStorage.removeItem("cw-spa-path");
+      window.history.replaceState({}, "", storedPath);
+    }
+    syncFromPath();
+    const onPopState = () => syncFromPath();
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [content.projects, content.labItems, studioUnlocked]);
+
   // scroll-triggered blur reveal — observes any .reveal-up element in current page
   useEffect(() => {
     if (loading) return;
@@ -93,20 +170,29 @@ export default function App() {
   }, [route, loading]);
 
   const go = (r: Route) => {
-    if (r === "studio-locked" && studioUnlocked) {
-      setRoute("studio-unlocked");
-    } else {
-      setRoute(r);
+    const nextRoute = r === "studio-locked" && studioUnlocked ? "studio-unlocked" : r;
+    const path = currentPath(nextRoute);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
     }
+    setRoute(nextRoute);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
   const openProject = (id: string) => {
     setProjectId(id);
+    const path = projectPath(id);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
     setRoute("project");
     window.scrollTo({ top: 0 });
   };
   const openLab = (id: string) => {
     setLabId(id);
+    const path = labPath(id);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
     setRoute("lab-detail");
     window.scrollTo({ top: 0 });
   };
@@ -144,6 +230,7 @@ export default function App() {
               go={go}
               onUnlock={() => {
                 setStudioUnlocked(true);
+                window.history.pushState({}, "", "/studio");
                 setRoute("studio-unlocked");
               }}
             />

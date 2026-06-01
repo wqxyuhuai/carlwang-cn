@@ -33,52 +33,36 @@ export function ProjectDetail({
 
   return (
     <div>
-      <section className="mx-auto max-w-[1440px] px-10 pt-12">
+      <section className="mx-auto max-w-[1680px] px-8 pt-10">
         <button
           onClick={() => go("work")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Work / {project.title}
+          <ArrowLeft className="w-4 h-4" /> Work
         </button>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 pt-12 pb-16">
-        <div className="grid grid-cols-12 gap-10 items-start">
-          <div className="col-span-7">
-            <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-6">
-              {project.category}
-            </div>
-            <h1
-              className="display text-[var(--fg)]"
-              style={{ fontSize: 96, lineHeight: 0.96 }}
-            >
-              {project.title}
-            </h1>
-            <p className="text-[var(--fg-2)] text-xl leading-relaxed mt-8 max-w-2xl">
-              {project.description}
-            </p>
-            {project.externalUrl && (
-              <a
-                href={project.externalUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-8 h-11 px-5 rounded-full bg-[var(--fg)] text-[var(--app-bg)] inline-flex items-center gap-2"
-              >
-                Open Project <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
-          </div>
-          <aside className="col-span-5 rounded-2xl border border-[color:var(--line)] p-6 bg-[color:var(--surface)]">
-            <dl className="space-y-3 text-sm">
-              <Row k="Category" v={project.category} />
-              <Row k="Role" v={project.role} />
-            </dl>
-          </aside>
-        </div>
+      <section className="mx-auto max-w-[960px] px-8 pt-14 pb-12 text-center">
+        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight">
+          {project.title}
+        </h1>
+        <p className="text-[var(--fg-2)] text-lg leading-relaxed mt-5">
+          {project.description}
+        </p>
+        {project.externalUrl && (
+          <a
+            href={project.externalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-7 h-11 px-5 rounded-full bg-[var(--fg)] text-[var(--app-bg)] inline-flex items-center gap-2"
+          >
+            Open Project <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10">
-        <div className="relative aspect-[16/8] media-rounded">
+      <section className="mx-auto max-w-[1440px] px-8">
+        <div className="relative aspect-[16/9] media-rounded">
           {project.coverImage ? (
             <img src={project.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
@@ -87,17 +71,12 @@ export function ProjectDetail({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1180px] px-10 py-20 grid grid-cols-12 gap-10">
-        <div className="col-span-5 text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
-          Project Story
-        </div>
-        <div className="col-span-7">
-          <RichContentView blocks={blocks} />
-        </div>
+      <section className="mx-auto max-w-[1180px] px-8 py-16">
+        <RichContentView blocks={blocks} />
       </section>
 
       {(project.videoUrl || project.galleryImages?.length) && (
-        <section className="mx-auto max-w-[1440px] px-10 py-8">
+        <section className="mx-auto max-w-[1440px] px-8 py-8">
           <div className="grid grid-cols-12 gap-4">
             {project.videoUrl && (
               <video
@@ -118,7 +97,7 @@ export function ProjectDetail({
         </section>
       )}
 
-      <section className="mx-auto max-w-[1440px] px-10 py-12 flex items-center justify-between">
+      <section className="mx-auto max-w-[1440px] px-8 py-12 flex items-center justify-between">
         <button onClick={() => openProject(prev.id)} className="group text-left">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1 flex items-center gap-2">
             <ArrowLeft className="w-3.5 h-3.5" /> Previous
@@ -205,15 +184,6 @@ function RichContentView({ blocks }: { blocks: RichBlock[] }) {
           </p>
         );
       })}
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-[color:var(--line-soft)] pb-3 last:border-0">
-      <dt className="text-[var(--muted-2)]">{k}</dt>
-      <dd className="text-[var(--fg)] text-right">{v}</dd>
     </div>
   );
 }

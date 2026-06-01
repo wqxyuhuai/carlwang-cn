@@ -19,34 +19,23 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
 
   return (
     <div>
-      <section className="mx-auto max-w-[1440px] px-10 pt-12">
+      <section className="mx-auto max-w-[1680px] px-8 pt-10">
         <button
           onClick={() => go("lab")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Lab / {item.title}
+          <ArrowLeft className="w-4 h-4" /> Lab
         </button>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 pt-12 pb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <span className="px-2.5 py-1 rounded-full bg-[color:var(--accent-soft)] text-[var(--accent)] text-xs">
-            {item.status}
-          </span>
-          <span className="px-2.5 py-1 rounded-full bg-[color:var(--hover)] text-[var(--fg-2)] text-xs">
-            {item.type}
-          </span>
-        </div>
-        <h1
-          className="display text-[var(--fg)]"
-          style={{ fontSize: 96, lineHeight: 0.96 }}
-        >
+      <section className="mx-auto max-w-[960px] px-8 pt-14 pb-12 text-center">
+        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight">
           {item.title}
         </h1>
-        <p className="text-[var(--fg-2)] text-xl leading-relaxed mt-8 max-w-2xl">
+        <p className="text-[var(--fg-2)] text-lg leading-relaxed mt-5">
           {item.description}
         </p>
-        <div className="flex gap-3 mt-8">
+        <div className="flex justify-center gap-3 mt-7">
           {item.demo && (
             <a
               href={item.demo}
@@ -68,8 +57,8 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10">
-        <div className="aspect-[16/8] media-rounded relative">
+      <section className="mx-auto max-w-[1440px] px-8">
+        <div className="aspect-[16/9] media-rounded relative">
           {item.coverImage ? (
             <img src={item.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
@@ -98,11 +87,8 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1180px] px-10 py-20 grid grid-cols-12 gap-10">
-        <div className="col-span-5 text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
-          Notes
-        </div>
-        <div className="col-span-7 space-y-8">
+      <section className="mx-auto max-w-[1180px] px-8 py-16">
+        <div className="space-y-8">
           <RichContentView blocks={blocks} />
           {item.techStack && (
             <div className="pt-4 flex flex-wrap gap-2">
@@ -116,7 +102,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 py-16">
+      <section className="mx-auto max-w-[1440px] px-8 py-16">
         <button
           onClick={() => go("lab")}
           className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)]"

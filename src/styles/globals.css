@@ -37,24 +37,24 @@
 }
 
 .theme-light {
-  --accent: #6f8a3a;
-  --accent-soft: rgba(111, 138, 58, 0.14);
-  --accent-glow: rgba(182, 207, 116, 0.55);
-  --accent-fg: #ffffff;
+  --accent: #b7d075;
+  --accent-soft: rgba(183, 208, 117, 0.16);
+  --accent-glow: rgba(183, 208, 117, 0.32);
+  --accent-fg: #11160a;
 
-  --app-bg: #f9f7f1;
-  --app-bg-2: #f2f0e8;
-  --surface: rgba(255, 255, 255, 0.6);
-  --surface-2: rgba(255, 255, 255, 0.8);
+  --app-bg: #ffffff;
+  --app-bg-2: #f7f7f7;
+  --surface: #ffffff;
+  --surface-2: #f8f8f8;
   --surface-3: rgba(0, 0, 0, 0.06);
-  --glass: rgba(255, 253, 246, 0.88);
-  --glass-strong: rgba(249, 247, 241, 0.96);
+  --glass: rgba(255, 255, 255, 0.9);
+  --glass-strong: rgba(255, 255, 255, 0.96);
 
-  --fg: #16170f;
-  --fg-2: #2c2d24;
-  --muted: #595a4f;
-  --muted-2: #82826f;
-  --muted-3: #a8a795;
+  --fg: #111111;
+  --fg-2: #2f2f2f;
+  --muted: #696969;
+  --muted-2: #8a8a8a;
+  --muted-3: #b6b6b6;
 
   --line: rgba(0, 0, 0, 0.08);
   --line-strong: rgba(0, 0, 0, 0.14);
@@ -64,9 +64,9 @@
   --shadow-glass: 0 1px 0 0 rgba(255, 255, 255, 0.7) inset,
     0 20px 50px -25px rgba(60, 70, 30, 0.25);
 
-  --blob-1: rgba(182, 207, 116, 0.2);
-  --blob-2: rgba(118, 142, 78, 0.1);
-  --blob-3: rgba(207, 168, 116, 0.1);
+  --blob-1: transparent;
+  --blob-2: transparent;
+  --blob-3: transparent;
 }
 
 /* selection */
