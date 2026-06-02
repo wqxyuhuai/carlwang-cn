@@ -8,6 +8,7 @@ import {
   Eye,
   Star,
   Upload,
+  UploadCloud,
   Link2,
   QrCode,
   Copy,
@@ -45,8 +46,10 @@ export function StudioUnlocked({
   go: (r: Route) => void;
   onLock: () => void;
 }) {
+  const { publishContent } = useContent();
   const [tab, setTab] = useState<Tab>("overview");
   const [toast, setToast] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
 
   const showToast = (m: string) => {
     setToast(m);
@@ -81,15 +84,34 @@ export function StudioUnlocked({
             codes, and basic site information.
           </p>
         </div>
-        <button
-          onClick={() => {
-            onLock();
-            go("home");
-          }}
-          className="h-10 px-4 rounded-full border border-[color:var(--line-strong)] text-[var(--fg-2)] hover:bg-[color:var(--hover)] flex items-center gap-2"
-        >
-          <Lock className="w-4 h-4" /> Lock Studio
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              setPublishing(true);
+              try {
+                await publishContent();
+                showToast("Content published");
+              } catch (error) {
+                showToast(error instanceof Error ? error.message : "Publish failed");
+              } finally {
+                setPublishing(false);
+              }
+            }}
+            disabled={publishing}
+            className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] hover:bg-[var(--accent)] disabled:opacity-50 flex items-center gap-2"
+          >
+            <UploadCloud className="w-4 h-4" /> {publishing ? "Publishing" : "Publish"}
+          </button>
+          <button
+            onClick={() => {
+              onLock();
+              go("home");
+            }}
+            className="h-10 px-4 rounded-full border border-[color:var(--line-strong)] text-[var(--fg-2)] hover:bg-[color:var(--hover)] flex items-center gap-2"
+          >
+            <Lock className="w-4 h-4" /> Lock Studio
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

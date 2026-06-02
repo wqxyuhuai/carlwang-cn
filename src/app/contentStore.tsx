@@ -14,6 +14,7 @@ import {
   type LabItem,
   type Project,
 } from "./data";
+import { uploadToOss } from "./ossUpload";
 
 export type SocialLink = {
   name: string;
@@ -84,10 +85,14 @@ type ContentContextValue = {
   deleteLink: (id: string) => void;
   submitContact: (message: Omit<ContactMessage, "id" | "createdAt">) => void;
   saveSettings: (settings: SiteSettings) => void;
+  publishContent: () => Promise<string>;
   resetContent: () => void;
 };
 
 const STORAGE_KEY = "cw-personal-hub-content-v1";
+const PUBLISHED_CONTENT_URL =
+  ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_CONTENT_URL ||
+    "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json");
 
 const defaultSettings: SiteSettings = {
   name: "Carl Wang",
@@ -204,6 +209,15 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
   };
 }
 
+function publicContent(value: SiteContent): SiteContent {
+  const { oss: _oss, ...settings } = value.settings;
+  return {
+    ...value,
+    messages: [],
+    settings,
+  };
+}
+
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<SiteContent>(() => {
     try {
@@ -213,6 +227,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       return defaultContent;
     }
   });
+
+  useEffect(() => {
+    if (content.settings.oss?.accessKeySecret) return;
+    fetch(`${PUBLISHED_CONTENT_URL}?t=${Date.now()}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((published) => {
+        if (published) setContent(normalizeContent(published));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -306,6 +330,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       },
       saveSettings(settings) {
         setContent((current) => ({ ...current, settings }));
+      },
+      async publishContent() {
+        const file = new File(
+          [JSON.stringify(publicContent(content), null, 2)],
+          "site-content.json",
+          { type: "application/json" },
+        );
+        return uploadToOss(file, content.settings.oss, "", "site-content.json");
       },
       resetContent() {
         setContent(defaultContent);
