@@ -441,13 +441,13 @@ function ProjectForm({
           <RichContentEditor
             label="Project body"
             blocks={f.richContent}
-            uploadPathPrefix={`${uploadBase}/body`}
+            uploadPathPrefix={uploadBase}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
           />
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={`${uploadBase}/cover`} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={uploadBase} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
@@ -637,13 +637,13 @@ function LabForm({
           <RichContentEditor
             label="Lab body"
             blocks={f.richContent}
-            uploadPathPrefix={`${uploadBase}/body`}
+            uploadPathPrefix={uploadBase}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
           />
         </section>
 
         <aside className="space-y-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 lg:sticky lg:top-24 self-start">
-          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={`${uploadBase}/cover`} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
+          <UploadBox label="Cover image (recommended 1600 x 1200 px)" accept="image/*" pathPrefix={uploadBase} onFiles={(files) => setF({ ...f, coverImage: files[0] ?? "" })} />
           {f.coverImage && (
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
@@ -1471,7 +1471,7 @@ function RichContentEditor({
                   <UploadBox
                     label=""
                     accept="image/*"
-                    pathPrefix={`${uploadPathPrefix}/images`}
+                    pathPrefix={uploadPathPrefix}
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
                 )}
@@ -1487,7 +1487,7 @@ function RichContentEditor({
                   <UploadBox
                     label=""
                     accept="video/*"
-                    pathPrefix={`${uploadPathPrefix}/videos`}
+                    pathPrefix={uploadPathPrefix}
                     onFiles={(files) => updateBlock(block.id, { value: files[0] ?? block.value })}
                   />
                 )}
