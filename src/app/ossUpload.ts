@@ -67,7 +67,7 @@ export async function uploadToOss(
   const date = new Date().toUTCString();
   const ossHeaders = `x-oss-date:${date}\nx-oss-object-acl:public-read\n`;
   const resource = `/${bucket}/${objectKey}`;
-  const stringToSign = `PUT\n\n${contentType}\n\n${ossHeaders}${resource}`;
+  const stringToSign = `PUT\n\n${contentType}\n${date}\n${ossHeaders}${resource}`;
   const signature = await hmacSha1(stringToSign, settings.accessKeySecret);
   const url = `https://${bucket}.${endpoint}/${encodePath(objectKey)}`;
 
