@@ -1312,18 +1312,19 @@ function slugify(value: string) {
 }
 
 function createRichBlock(type: RichBlock["type"]): RichBlock {
+  const isText = isTextType(type);
   return {
     id: `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
     type,
     value: "",
     align: "left",
     size: "md",
-    width: type === "text" ? "wide" : "full",
+    width: isText ? "wide" : "full",
   };
 }
 
 function ensureUniqueBlocks(blocks?: RichBlock[]) {
-  const source = blocks?.length ? blocks : [createRichBlock("text")];
+  const source = blocks?.length ? blocks : [createRichBlock("paragraph")];
   const seen = new Set<string>();
   return source.map((block, index) => {
     const id =
@@ -1336,7 +1337,7 @@ function ensureUniqueBlocks(blocks?: RichBlock[]) {
 }
 
 function textToRichBlocks(value?: string): RichBlock[] {
-  if (!value?.trim()) return [createRichBlock("text")];
+  if (!value?.trim()) return [createRichBlock("paragraph")];
   return value
     .split(/\n+/)
     .filter(Boolean)
@@ -1350,7 +1351,7 @@ function textToRichBlocks(value?: string): RichBlock[] {
     }));
 }
 
-function isEditableTextBlock(block: RichBlock) {
+function isTextType(type: RichBlock["type"]) {
   return [
     "text",
     "paragraph",
@@ -1362,7 +1363,39 @@ function isEditableTextBlock(block: RichBlock) {
     "quote",
     "callout",
     "code",
-  ].includes(block.type);
+  ].includes(type);
+}
+
+function isEditableTextBlock(block: RichBlock) {
+  return isTextType(block.type);
+}
+
+function blockLabel(type: RichBlock["type"]) {
+  const labels: Partial<Record<RichBlock["type"], string>> = {
+    text: "Paragraph",
+    paragraph: "Paragraph",
+    heading_1: "Heading 1",
+    heading_2: "Heading 2",
+    heading_3: "Heading 3",
+    bulleted_list_item: "Bulleted list",
+    numbered_list_item: "Numbered list",
+    quote: "Quote",
+    callout: "Callout",
+    code: "Code",
+    divider: "Divider",
+    bookmark: "Bookmark",
+    embed: "Embed",
+    image: "Image",
+    video: "Video",
+  };
+  return labels[type] || type;
+}
+
+function textBlockDefaultSize(type: RichBlock["type"]): RichBlock["size"] {
+  if (type === "heading_1") return "xl";
+  if (type === "heading_2") return "lg";
+  if (type === "heading_3") return "md";
+  return "md";
 }
 
 function RichContentEditor({
@@ -1410,7 +1443,7 @@ function RichContentEditor({
     });
   const addItems = [
     { type: "image" as const, label: "Image", icon: ImageIcon },
-    { type: "text" as const, label: "Text", icon: Type },
+    { type: "paragraph" as const, label: "Text", icon: Type },
     { type: "video" as const, label: "Video", icon: Video },
   ];
 
@@ -1433,7 +1466,7 @@ function RichContentEditor({
         ]);
       }}
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5 flex items-center justify-between">
         <div>
           <label className="text-[var(--fg)] font-semibold block">{label}</label>
         </div>
@@ -1458,7 +1491,7 @@ function RichContentEditor({
           ))}
         </div>
       </div>
-      <div className="space-y-4">
+      <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--app-bg)] px-8 py-7">
         {safeBlocks.map((block, index) => (
           <div
             key={block.id}
@@ -1473,13 +1506,13 @@ function RichContentEditor({
               setDragOverIndex(null);
               moveBlock(from, index);
             }}
-            className={`group bg-[var(--app-bg)] border transition-shadow ${
+            className={`group relative -mx-5 grid grid-cols-[36px_minmax(0,1fr)] gap-2 rounded-xl px-2 py-1 transition-colors ${
               dragOverIndex === index
-                ? "border-[color:var(--accent)] ring-2 ring-[color:var(--accent)]/20"
-                : "border-[color:var(--line)] hover:border-[color:var(--accent)]/60"
+                ? "bg-[color:var(--accent-soft)]"
+                : "hover:bg-[color:var(--hover)]"
             }`}
           >
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--line)] bg-[color:var(--surface-2)] px-3 py-2">
+            <div className="flex items-start justify-center pt-3 opacity-0 transition-opacity group-hover:opacity-100">
               <div
                 draggable
                 onDragStart={(event) => {
@@ -1487,28 +1520,33 @@ function RichContentEditor({
                   event.dataTransfer.effectAllowed = "move";
                 }}
                 onDragEnd={() => setDragOverIndex(null)}
-                className="flex cursor-grab items-center gap-2 text-xs text-[var(--muted)] active:cursor-grabbing"
+                className="flex cursor-grab items-center gap-1 text-[var(--muted)] active:cursor-grabbing"
                 title="Drag to reorder"
               >
-                <GripVertical className="w-4 h-4" />
-                <span>{index + 1}. {block.type}</span>
+                <GripVertical className="h-4 w-4" />
               </div>
-              <BlockToolbar
-                block={block}
-                onChange={(patch) => updateBlock(block.id, patch)}
-                onDelete={() => removeBlock(block.id)}
-                onMoveUp={() => moveBlock(index, index - 1)}
-                onMoveDown={() => moveBlock(index, index + 1)}
-                canMoveUp={index > 0}
-                canMoveDown={index < safeBlocks.length - 1}
-              />
             </div>
+
+            <div className="min-w-0">
+              <div className="mb-1 flex items-center justify-between gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="text-xs text-[var(--muted-2)]">{blockLabel(block.type)}</span>
+                <BlockToolbar
+                  block={block}
+                  onChange={(patch) => updateBlock(block.id, patch)}
+                  onDelete={() => removeBlock(block.id)}
+                  onMoveUp={() => moveBlock(index, index - 1)}
+                  onMoveDown={() => moveBlock(index, index + 1)}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < safeBlocks.length - 1}
+                />
+              </div>
 
             {isEditableTextBlock(block) && (
               <textarea
                 value={block.value}
                 onChange={(event) => updateBlock(block.id, { value: event.target.value })}
-                className={`${richBlockClass(block)} min-h-[120px] resize-y outline-none whitespace-pre-wrap px-3 py-4 bg-transparent`}
+                placeholder="Type '/' for commands"
+                className={`${richBlockClass(block)} min-h-[44px] resize-y outline-none whitespace-pre-wrap bg-transparent px-0 py-1`}
                 style={richBlockStyle(block)}
               />
             )}
@@ -1520,17 +1558,18 @@ function RichContentEditor({
             )}
 
             {(block.type === "bookmark" || block.type === "embed") && (
-              <Field
-                label={block.type}
+              <input
                 value={block.value}
-                onChange={(value) => updateBlock(block.id, { value, url: value })}
+                onChange={(event) => updateBlock(block.id, { value: event.target.value, url: event.target.value })}
+                className="h-11 w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-4 text-sm text-[var(--fg)] outline-none focus:border-[color:var(--accent)]/60"
+                placeholder="Paste a URL"
               />
             )}
 
             {block.type === "image" && (
               <div className={`${richBlockClass(block)} px-0`} style={richBlockStyle(block)}>
                 {block.value && (
-                  <img src={block.value} alt="" className="w-full object-cover" />
+                  <img src={block.value} alt="" className="w-full rounded-xl object-cover" />
                 )}
                 {!block.value && (
                   <UploadBox
@@ -1546,7 +1585,7 @@ function RichContentEditor({
             {block.type === "video" && (
               <div className={`${richBlockClass(block)} px-0`} style={richBlockStyle(block)}>
                 {block.value && (
-                  <video src={block.value} controls className="aspect-video w-full object-cover" />
+                  <video src={block.value} controls className="aspect-video w-full rounded-xl object-cover" />
                 )}
                 {!block.value && (
                   <UploadBox
@@ -1558,6 +1597,7 @@ function RichContentEditor({
                 )}
               </div>
             )}
+            </div>
           </div>
         ))}
       </div>
@@ -1587,7 +1627,7 @@ function BlockToolbar({
   const buttonClass =
     "h-8 min-w-8 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] px-2 text-xs text-[var(--fg)] hover:bg-[color:var(--hover)] disabled:opacity-35 disabled:hover:bg-[var(--app-bg)]";
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1">
+    <div className="flex flex-wrap items-center justify-end gap-1 rounded-xl border border-[color:var(--line)] bg-[var(--surface)] p-1 shadow-sm">
       <button type="button" onClick={onMoveUp} disabled={!canMoveUp} className={buttonClass} title="Move up">
         <ArrowUp className="w-4 h-4" />
       </button>
@@ -1596,28 +1636,43 @@ function BlockToolbar({
       </button>
       {isEditableTextBlock(block) && (
         <>
-          <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className={selectClass}>
-            <option value="sm">Small</option>
-            <option value="md">Paragraph</option>
-            <option value="lg">Heading</option>
-            <option value="xl">Title</option>
+          <select
+            value={block.type === "text" ? "paragraph" : block.type}
+            onChange={(event) =>
+              onChange({
+                type: event.target.value as RichBlock["type"],
+                size: textBlockDefaultSize(event.target.value as RichBlock["type"]),
+                weight: event.target.value.startsWith("heading") ? "bold" : "normal",
+              })
+            }
+            className={`${selectClass} w-[132px]`}
+          >
+            <option value="paragraph">Paragraph</option>
+            <option value="heading_1">Heading 1</option>
+            <option value="heading_2">Heading 2</option>
+            <option value="heading_3">Heading 3</option>
+            <option value="bulleted_list_item">Bulleted list</option>
+            <option value="numbered_list_item">Numbered list</option>
+            <option value="quote">Quote</option>
+            <option value="callout">Callout</option>
+            <option value="code">Code</option>
           </select>
-          <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className={selectClass}>
+          <select value={block.fontFamily ?? "Inter"} onChange={(event) => onChange({ fontFamily: event.target.value })} className={`${selectClass} hidden xl:block`}>
             <option value="Inter">Inter</option>
             <option value="Arial">Arial</option>
             <option value="Georgia">Georgia</option>
             <option value="Times New Roman">Times</option>
           </select>
-          <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="h-8 w-9 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] p-1" title="Text color" />
+          <input type="color" value={block.color ?? "#111111"} onChange={(event) => onChange({ color: event.target.value })} className="hidden h-8 w-9 rounded-lg border border-[color:var(--line)] bg-[var(--app-bg)] p-1 xl:block" title="Text color" />
           <button type="button" onClick={() => onChange({ weight: block.weight === "bold" ? "normal" : "bold" })} className={`${buttonClass} font-bold`}>B</button>
           <button type="button" onClick={() => onChange({ italic: !block.italic })} className={`${buttonClass} italic`}>I</button>
           <button type="button" onClick={() => onChange({ underline: !block.underline })} className={`${buttonClass} underline`}>U</button>
-          <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className={selectClass}>
+          <select value={block.align ?? "left"} onChange={(event) => onChange({ align: event.target.value as RichBlock["align"] })} className={`${selectClass} hidden 2xl:block`}>
             <option value="left">Left</option>
             <option value="center">Center</option>
             <option value="right">Right</option>
           </select>
-          <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className={selectClass}>
+          <select value={block.width ?? "full"} onChange={(event) => onChange({ width: event.target.value as RichBlock["width"] })} className={`${selectClass} hidden 2xl:block`}>
             <option value="full">Full</option>
             <option value="wide">Wide</option>
             <option value="half">Half</option>
@@ -1632,9 +1687,14 @@ function BlockToolbar({
 function richBlockClass(block: RichBlock) {
   const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
   const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
-  if (block.type === "heading_1") return `${width} ${align} text-3xl font-semibold`;
-  if (block.type === "heading_2") return `${width} ${align} text-2xl font-semibold`;
-  if (block.type === "heading_3") return `${width} ${align} text-xl font-semibold`;
+  if (block.type === "heading_1") return `${width} ${align} text-4xl font-semibold leading-tight`;
+  if (block.type === "heading_2") return `${width} ${align} text-3xl font-semibold leading-tight`;
+  if (block.type === "heading_3") return `${width} ${align} text-2xl font-semibold leading-snug`;
+  if (block.type === "quote") return `${width} ${align} border-l-2 border-[color:var(--fg)] pl-4 text-xl leading-8`;
+  if (block.type === "callout") return `${width} ${align} rounded-xl bg-[color:var(--surface-2)] px-4 text-base leading-8`;
+  if (block.type === "code") return `${width} ${align} rounded-xl bg-[#111] px-4 font-mono text-sm leading-7 text-white`;
+  if (block.type === "bulleted_list_item") return `${width} ${align} pl-6 text-base leading-8 before:content-['-'] before:-ml-5 before:mr-3 before:text-[var(--muted)]`;
+  if (block.type === "numbered_list_item") return `${width} ${align} pl-6 text-base leading-8`;
   const size =
     block.size === "xl"
       ? "text-3xl"
