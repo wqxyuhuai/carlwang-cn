@@ -227,22 +227,18 @@ function textFromBlock(block) {
 }
 
 function textBlockType(type) {
-  if (
-    [
-      "paragraph",
-      "heading_1",
-      "heading_2",
-      "heading_3",
-      "bulleted_list_item",
-      "numbered_list_item",
-      "quote",
-      "callout",
-      "code",
-    ].includes(type)
-  ) {
-    return type;
-  }
+  if (type === "heading_1" || type === "heading_2" || type === "heading_3") return "heading";
+  if (type === "bulleted_list_item" || type === "numbered_list_item") return "list";
+  if (type === "bookmark") return "embed";
+  if (["paragraph", "quote", "callout", "code"].includes(type)) return type;
   return "paragraph";
+}
+
+function headingLevel(type) {
+  if (type === "heading_1") return 1;
+  if (type === "heading_2") return 2;
+  if (type === "heading_3") return 3;
+  return undefined;
 }
 
 function textBlockSize(type) {
@@ -494,6 +490,43 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
     return { id, type: "divider", value: "" };
   }
 
+  if (block.type === "column_list") {
+    const columns = block.has_children
+      ? (
+          await Promise.all(
+            (await listBlocks(block.id)).map((child) =>
+              notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
+            ),
+          )
+        ).filter(Boolean)
+      : [];
+    return {
+      id,
+      type: "columns",
+      value: "",
+      width: "wide",
+      columns: columns.map((column) => column.children || []),
+    };
+  }
+
+  if (block.type === "column") {
+    const children = block.has_children
+      ? (
+          await Promise.all(
+            (await listBlocks(block.id)).map((child) =>
+              notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
+            ),
+          )
+        ).filter(Boolean)
+      : [];
+    return {
+      id,
+      type: "fallback",
+      value: "column",
+      children,
+    };
+  }
+
   if (block.type === "image" || block.type === "video") {
     const uploaded = await uploadRemoteMedia(
       mediaUrl(block),
@@ -517,9 +550,27 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
     const value = block[block.type]?.url || "";
     return {
       id,
-      type: block.type,
+      type: "embed",
       value,
+      text: value,
       url: value,
+      width: "wide",
+    };
+  }
+
+  if (block.type === "table") {
+    const rows = block.has_children
+      ? (await listBlocks(block.id))
+          .filter((row) => row.type === "table_row")
+          .map((row) =>
+            (row.table_row?.cells || []).map((cell) => firstText(cell)),
+          )
+      : [];
+    return {
+      id,
+      type: "table",
+      value: "",
+      rows,
       width: "wide",
     };
   }
@@ -537,7 +588,12 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
   ].includes(block.type);
 
   if (!isTextLike) {
-    return null;
+    return {
+      id,
+      type: "fallback",
+      value: block.type,
+      width: "wide",
+    };
   }
 
   const children = block.has_children
@@ -554,6 +610,13 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
     id,
     type: textBlockType(block.type),
     value: textFromBlock(block).trim(),
+    text: textFromBlock(block).trim(),
+    level: headingLevel(block.type),
+    ordered: block.type === "numbered_list_item",
+    items:
+      block.type === "bulleted_list_item" || block.type === "numbered_list_item"
+        ? [textFromBlock(block).trim()]
+        : undefined,
     language: block.type === "code" ? block.code?.language : undefined,
     icon: block.type === "callout" ? calloutIcon(block) : undefined,
     children,

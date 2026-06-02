@@ -1,7 +1,10 @@
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
-import { NotionContentView, textToRichBlocks } from "./NotionContent";
+import {
+  ProjectContentRenderer,
+  textToProjectBlocks,
+} from "./ProjectContentRenderer";
 
 export function ProjectDetail({
   id,
@@ -28,7 +31,7 @@ export function ProjectDetail({
   const blocks =
     project.richContent?.length
       ? project.richContent
-      : textToRichBlocks(project.content || "");
+      : textToProjectBlocks(project.content || "");
 
   return (
     <div>
@@ -58,7 +61,7 @@ export function ProjectDetail({
       </section>
 
       <section className="content-shell py-12">
-        <NotionContentView blocks={blocks} />
+        <ProjectContentRenderer blocks={blocks} />
       </section>
 
       <section className="content-shell py-12 flex items-center justify-between">

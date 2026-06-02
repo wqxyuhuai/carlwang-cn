@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   Plus,
   Edit3,
@@ -17,9 +17,6 @@ import {
   Pin,
   FileText,
   Lock,
-  Image as ImageIcon,
-  Type,
-  Video,
   GripVertical,
   Undo2,
   ArrowUp,
@@ -29,6 +26,7 @@ import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
 import type { LabItem, Project, RichBlock } from "../data";
 import { canUploadToOss, uploadToOss } from "../ossUpload";
+import { ProjectBlockEditor } from "./editor/ProjectBlockEditor";
 
 type Tab =
   | "overview"
@@ -430,9 +428,8 @@ function ProjectForm({
       className="space-y-0"
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="min-h-[620px] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-5">
-          <RichContentEditor
-            label="Project body"
+        <section className="min-h-[620px] rounded-2xl border border-transparent bg-transparent p-0">
+          <ProjectBlockEditor
             blocks={f.richContent}
             uploadPathPrefix={uploadBase}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
@@ -642,9 +639,8 @@ function LabForm({
       className="space-y-0"
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="min-h-[620px] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-5">
-          <RichContentEditor
-            label="Lab body"
+        <section className="min-h-[620px] rounded-2xl border border-transparent bg-transparent p-0">
+          <ProjectBlockEditor
             blocks={f.richContent}
             uploadPathPrefix={uploadBase}
             onChange={(blocks) => setF({ ...f, richContent: blocks })}
@@ -1312,9 +1308,41 @@ function slugify(value: string) {
 }
 
 function createRichBlock(type: RichBlock["type"]): RichBlock {
+  const newId = () =>
+    `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  if (type === "column_list") {
+    return {
+      id: newId(),
+      type,
+      value: "",
+      width: "wide",
+      children: [
+        {
+          id: newId(),
+          type: "column",
+          value: "",
+          children: [createRichBlock("paragraph")],
+        },
+        {
+          id: newId(),
+          type: "column",
+          value: "",
+          children: [createRichBlock("paragraph")],
+        },
+      ],
+    };
+  }
+  if (type === "column") {
+    return {
+      id: newId(),
+      type,
+      value: "",
+      children: [createRichBlock("paragraph")],
+    };
+  }
   const isText = isTextType(type);
   return {
-    id: `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    id: newId(),
     type,
     value: "",
     align: "left",
@@ -1387,6 +1415,8 @@ function blockLabel(type: RichBlock["type"]) {
     embed: "Embed",
     image: "Image",
     video: "Video",
+    column_list: "Two columns",
+    column: "Column",
   };
   return labels[type] || type;
 }
@@ -1412,6 +1442,8 @@ function RichContentEditor({
   const safeBlocks = ensureUniqueBlocks(blocks);
   const [history, setHistory] = useState<RichBlock[][]>([]);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [plusMenuIndex, setPlusMenuIndex] = useState<number | null>(null);
+  const [slashMenuIndex, setSlashMenuIndex] = useState<number | null>(null);
   const commitChange = (next: RichBlock[]) => {
     setHistory((items) => [...items.slice(-19), safeBlocks]);
     onChange(next);
@@ -1424,9 +1456,89 @@ function RichContentEditor({
   };
   const updateBlock = (id: string, patch: Partial<RichBlock>) =>
     commitChange(safeBlocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
-  const addBlock = (type: RichBlock["type"]) => commitChange([...safeBlocks, createRichBlock(type)]);
+  const insertBlockAfter = (index: number, type: RichBlock["type"]) => {
+    const next = [...safeBlocks];
+    next.splice(index + 1, 0, createRichBlock(type));
+    setPlusMenuIndex(null);
+    setSlashMenuIndex(null);
+    commitChange(next);
+  };
+  const replaceBlock = (index: number, type: RichBlock["type"]) => {
+    const next = [...safeBlocks];
+    next[index] = {
+      ...createRichBlock(type),
+      id: safeBlocks[index].id,
+    };
+    setPlusMenuIndex(null);
+    setSlashMenuIndex(null);
+    commitChange(next);
+  };
   const removeBlock = (id: string) =>
     commitChange(safeBlocks.length > 1 ? safeBlocks.filter((block) => block.id !== id) : safeBlocks);
+  const updateColumnChild = (
+    blockId: string,
+    columnId: string,
+    childId: string,
+    patch: Partial<RichBlock>,
+  ) =>
+    commitChange(
+      safeBlocks.map((block) =>
+        block.id !== blockId
+          ? block
+          : {
+              ...block,
+              children: (block.children || []).map((column) =>
+                column.id !== columnId
+                  ? column
+                  : {
+                      ...column,
+                      children: (column.children || []).map((child) =>
+                        child.id === childId ? { ...child, ...patch } : child,
+                      ),
+                    },
+              ),
+            },
+      ),
+    );
+  const insertColumnChildAfter = (
+    blockId: string,
+    columnId: string,
+    childIndex: number,
+    type: RichBlock["type"] = "paragraph",
+  ) =>
+    commitChange(
+      safeBlocks.map((block) =>
+        block.id !== blockId
+          ? block
+          : {
+              ...block,
+              children: (block.children || []).map((column) => {
+                if (column.id !== columnId) return column;
+                const nextChildren = [...(column.children || [])];
+                nextChildren.splice(childIndex + 1, 0, createRichBlock(type));
+                return { ...column, children: nextChildren };
+              }),
+            },
+      ),
+    );
+  const removeColumnChild = (blockId: string, columnId: string, childId: string) =>
+    commitChange(
+      safeBlocks.map((block) =>
+        block.id !== blockId
+          ? block
+          : {
+              ...block,
+              children: (block.children || []).map((column) => {
+                if (column.id !== columnId) return column;
+                const nextChildren = (column.children || []).filter((child) => child.id !== childId);
+                return {
+                  ...column,
+                  children: nextChildren.length ? nextChildren : [createRichBlock("paragraph")],
+                };
+              }),
+            },
+      ),
+    );
   const moveBlock = (from: number, to: number) => {
     if (from === to || to < 0 || to >= safeBlocks.length) return;
     const next = [...safeBlocks];
@@ -1441,10 +1553,20 @@ function RichContentEditor({
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
-  const addItems = [
-    { type: "image" as const, label: "Image", icon: ImageIcon },
-    { type: "paragraph" as const, label: "Text", icon: Type },
-    { type: "video" as const, label: "Video", icon: Video },
+  const commandItems = [
+    { type: "paragraph" as const, title: "Text", body: "Plain paragraph" },
+    { type: "heading_1" as const, title: "Heading 1", body: "Large section heading" },
+    { type: "heading_2" as const, title: "Heading 2", body: "Medium section heading" },
+    { type: "heading_3" as const, title: "Heading 3", body: "Small section heading" },
+    { type: "bulleted_list_item" as const, title: "Bulleted list", body: "Simple list item" },
+    { type: "numbered_list_item" as const, title: "Numbered list", body: "Numbered list item" },
+    { type: "quote" as const, title: "Quote", body: "Indented quote block" },
+    { type: "callout" as const, title: "Callout", body: "Highlighted note" },
+    { type: "code" as const, title: "Code", body: "Code block" },
+    { type: "image" as const, title: "Image", body: "Upload or paste image" },
+    { type: "video" as const, title: "Video", body: "Upload video" },
+    { type: "divider" as const, title: "Divider", body: "Horizontal rule" },
+    { type: "column_list" as const, title: "Two columns", body: "Side-by-side layout" },
   ];
 
   return (
@@ -1469,27 +1591,18 @@ function RichContentEditor({
       <div className="mb-5 flex items-center justify-between">
         <div>
           <label className="text-[var(--fg)] font-semibold block">{label}</label>
+          <p className="mt-1 text-sm text-[var(--muted-2)]">
+            Type directly, press Enter for a new block, or type / for commands.
+          </p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={undo}
-            disabled={!history.length}
-            className="h-10 px-3 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] text-[var(--fg)] text-sm hover:bg-[color:var(--hover)] disabled:opacity-40 disabled:hover:bg-[var(--app-bg)] inline-flex items-center gap-2"
-          >
-            <Undo2 className="w-4 h-4" /> Undo
-          </button>
-          {addItems.map(({ type, label: itemLabel, icon: Icon }) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => addBlock(type)}
-              className="h-10 px-3 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] text-[var(--fg)] text-sm hover:bg-[color:var(--hover)] inline-flex items-center gap-2"
-            >
-              <Icon className="w-4 h-4" /> {itemLabel}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={undo}
+          disabled={!history.length}
+          className="inline-flex h-10 items-center gap-2 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] px-3 text-sm text-[var(--fg)] hover:bg-[color:var(--hover)] disabled:opacity-40 disabled:hover:bg-[var(--app-bg)]"
+        >
+          <Undo2 className="w-4 h-4" /> Undo
+        </button>
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--app-bg)] px-8 py-7">
         {safeBlocks.map((block, index) => (
@@ -1512,7 +1625,15 @@ function RichContentEditor({
                 : "hover:bg-[color:var(--hover)]"
             }`}
           >
-            <div className="flex items-start justify-center pt-3 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="relative flex items-start justify-center gap-1 pt-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => setPlusMenuIndex(plusMenuIndex === index ? null : index)}
+                className="grid h-7 w-7 place-items-center rounded-md text-[var(--muted)] hover:bg-[color:var(--surface-2)] hover:text-[var(--fg)]"
+                title="Add block"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
               <div
                 draggable
                 onDragStart={(event) => {
@@ -1525,6 +1646,12 @@ function RichContentEditor({
               >
                 <GripVertical className="h-4 w-4" />
               </div>
+              {plusMenuIndex === index && (
+                <CommandMenu
+                  items={commandItems}
+                  onPick={(type) => insertBlockAfter(index, type)}
+                />
+              )}
             </div>
 
             <div className="min-w-0">
@@ -1542,12 +1669,42 @@ function RichContentEditor({
               </div>
 
             {isEditableTextBlock(block) && (
-              <textarea
-                value={block.value}
-                onChange={(event) => updateBlock(block.id, { value: event.target.value })}
-                placeholder="Type '/' for commands"
-                className={`${richBlockClass(block)} min-h-[44px] resize-y outline-none whitespace-pre-wrap bg-transparent px-0 py-1`}
+              <EditableTextBlock
+                block={block}
+                className={richBlockClass(block)}
                 style={richBlockStyle(block)}
+                onSlash={(open) => setSlashMenuIndex(open ? index : null)}
+                onChange={(value) => updateBlock(block.id, { value })}
+                onEnter={() => insertBlockAfter(index, "paragraph")}
+                onEmptyBackspace={() => removeBlock(block.id)}
+                onEscape={() => {
+                  setSlashMenuIndex(null);
+                  setPlusMenuIndex(null);
+                }}
+              >
+                {slashMenuIndex === index && (
+                  <CommandMenu
+                    items={commandItems}
+                    align="content"
+                    onPick={(type) => replaceBlock(index, type)}
+                  />
+                )}
+              </EditableTextBlock>
+            )}
+
+            {block.type === "column_list" && (
+              <ColumnListEditor
+                block={block}
+                uploadPathPrefix={uploadPathPrefix}
+                onChangeChild={(columnId, childId, patch) =>
+                  updateColumnChild(block.id, columnId, childId, patch)
+                }
+                onEnterChild={(columnId, childIndex) =>
+                  insertColumnChildAfter(block.id, columnId, childIndex)
+                }
+                onRemoveChild={(columnId, childId) =>
+                  removeColumnChild(block.id, columnId, childId)
+                }
               />
             )}
 
@@ -1603,6 +1760,173 @@ function RichContentEditor({
       </div>
     </div>
   );
+}
+
+function EditableTextBlock({
+  block,
+  className,
+  style,
+  children,
+  onSlash,
+  onChange,
+  onEnter,
+  onEmptyBackspace,
+  onEscape,
+}: {
+  block: RichBlock;
+  className: string;
+  style: CSSProperties;
+  children?: ReactNode;
+  onSlash?: (open: boolean) => void;
+  onChange: (value: string) => void;
+  onEnter: () => void;
+  onEmptyBackspace: () => void;
+  onEscape?: () => void;
+}) {
+  return (
+    <div className="relative">
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        data-placeholder="Type '/' for commands"
+        className={`${className} notion-editable min-h-[36px] cursor-text whitespace-pre-wrap break-words px-0 py-1 outline-none empty:before:text-[var(--muted-3)] empty:before:content-[attr(data-placeholder)]`}
+        style={style}
+        onInput={(event) => {
+          const value = event.currentTarget.textContent || "";
+          onSlash?.(value.trim() === "/");
+        }}
+        onBlur={(event) => onChange(event.currentTarget.textContent || "")}
+        onKeyDown={(event) => {
+          const value = event.currentTarget.textContent || "";
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            onChange(value);
+            onEnter();
+          }
+          if (event.key === "Backspace" && !value && block.value === "") {
+            event.preventDefault();
+            onEmptyBackspace();
+          }
+          if (event.key === "/" && !value) onSlash?.(true);
+          if (event.key === "Escape") onEscape?.();
+        }}
+      >
+        {block.value}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ColumnListEditor({
+  block,
+  uploadPathPrefix,
+  onChangeChild,
+  onEnterChild,
+  onRemoveChild,
+}: {
+  block: RichBlock;
+  uploadPathPrefix: string;
+  onChangeChild: (columnId: string, childId: string, patch: Partial<RichBlock>) => void;
+  onEnterChild: (columnId: string, childIndex: number) => void;
+  onRemoveChild: (columnId: string, childId: string) => void;
+}) {
+  const columns = block.children?.length ? block.children : createRichBlock("column_list").children || [];
+  return (
+    <div className="my-4 grid gap-5 md:grid-cols-2">
+      {columns.slice(0, 2).map((column) => (
+        <div
+          key={column.id}
+          className="min-w-0 rounded-xl border border-dashed border-[color:var(--line)] bg-[color:var(--surface)] px-4 py-3"
+        >
+          {(column.children || []).map((child, childIndex) => {
+            if (isEditableTextBlock(child)) {
+              return (
+                <EditableTextBlock
+                  key={child.id}
+                  block={child}
+                  className={richBlockClass(child)}
+                  style={richBlockStyle(child)}
+                  onChange={(value) => onChangeChild(column.id, child.id, { value })}
+                  onEnter={() => onEnterChild(column.id, childIndex)}
+                  onEmptyBackspace={() => onRemoveChild(column.id, child.id)}
+                />
+              );
+            }
+            if (child.type === "image") {
+              return (
+                <div key={child.id} className="my-3">
+                  {child.value ? (
+                    <img src={child.value} alt="" className="w-full rounded-xl object-cover" />
+                  ) : (
+                    <UploadBox
+                      label=""
+                      accept="image/*"
+                      pathPrefix={uploadPathPrefix}
+                      onFiles={(files) =>
+                        onChangeChild(column.id, child.id, { value: files[0] ?? child.value })
+                      }
+                    />
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CommandMenu({
+  items,
+  onPick,
+  align = "gutter",
+}: {
+  items: Array<{ type: RichBlock["type"]; title: string; body: string }>;
+  onPick: (type: RichBlock["type"]) => void;
+  align?: "gutter" | "content";
+}) {
+  return (
+    <div
+      className={`absolute z-30 w-[280px] overflow-hidden rounded-xl border border-[color:var(--line)] bg-[var(--surface)] py-1 shadow-xl backdrop-blur ${
+        align === "content" ? "left-0 top-10" : "left-8 top-8"
+      }`}
+    >
+      {items.map((item) => (
+        <button
+          key={item.type}
+          type="button"
+          onClick={() => onPick(item.type)}
+          className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-[color:var(--hover)]"
+        >
+          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[color:var(--surface-2)] text-xs text-[var(--fg)]">
+            {blockMenuIcon(item.type)}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm text-[var(--fg)]">{item.title}</span>
+            <span className="block text-xs text-[var(--muted-2)]">{item.body}</span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function blockMenuIcon(type: RichBlock["type"]) {
+  if (type === "heading_1") return "H1";
+  if (type === "heading_2") return "H2";
+  if (type === "heading_3") return "H3";
+  if (type === "bulleted_list_item") return "-";
+  if (type === "numbered_list_item") return "1";
+  if (type === "quote") return "\"";
+  if (type === "callout") return "i";
+  if (type === "code") return "</>";
+  if (type === "image") return "img";
+  if (type === "video") return "vid";
+  if (type === "divider") return "--";
+  return "T";
 }
 
 function BlockToolbar({
@@ -1869,7 +2193,7 @@ function Toggle({
   );
 }
 
-function UploadBox({
+export function UploadBox({
   label,
   accept,
   multiple,

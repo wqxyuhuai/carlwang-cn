@@ -1,27 +1,43 @@
-export type RichBlock = {
+export type ProjectBlockType =
+  | "paragraph"
+  | "heading"
+  | "image"
+  | "video"
+  | "quote"
+  | "callout"
+  | "divider"
+  | "list"
+  | "table"
+  | "embed"
+  | "columns"
+  | "gallery-grid"
+  | "fallback"
+  | "text"
+  | "heading_1"
+  | "heading_2"
+  | "heading_3"
+  | "bulleted_list_item"
+  | "numbered_list_item"
+  | "code"
+  | "bookmark"
+  | "column_list"
+  | "column";
+
+export type ProjectBlock = {
   id: string;
-  type:
-    | "text"
-    | "paragraph"
-    | "heading_1"
-    | "heading_2"
-    | "heading_3"
-    | "bulleted_list_item"
-    | "numbered_list_item"
-    | "quote"
-    | "callout"
-    | "code"
-    | "divider"
-    | "bookmark"
-    | "embed"
-    | "image"
-    | "video";
+  type: ProjectBlockType;
   value: string;
+  text?: string;
+  level?: 1 | 2 | 3;
   caption?: string;
   language?: string;
   icon?: string;
   url?: string;
-  children?: RichBlock[];
+  items?: string[];
+  ordered?: boolean;
+  rows?: string[][];
+  columns?: ProjectBlock[][];
+  children?: ProjectBlock[];
   align?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg" | "xl";
   width?: "full" | "wide" | "half";
@@ -31,6 +47,8 @@ export type RichBlock = {
   italic?: boolean;
   underline?: boolean;
 };
+
+export type RichBlock = ProjectBlock;
 
 export type Project = {
   id: string;
