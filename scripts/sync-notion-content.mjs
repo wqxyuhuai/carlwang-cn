@@ -7,6 +7,7 @@ const ENV_PATH = path.join(ROOT, ".env.local");
 const NOTION_VERSION = "2022-06-28";
 const DEFAULT_CONTENT_URL =
   "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json";
+const FETCH_TIMEOUT_MS = Number(process.env.SYNC_FETCH_TIMEOUT_MS || 90000);
 const PLACEHOLDER_PROJECT_IDS = new Set([
   "wattdesk",
   "imaster",
@@ -43,6 +44,19 @@ function required(name) {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`Missing ${name}`);
   return value;
+}
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function cleanPart(value) {
@@ -95,6 +109,10 @@ function firstText(richText = []) {
   return richText.map((entry) => entry.plain_text || "").join("");
 }
 
+function captionText(value = {}) {
+  return firstText(value.caption || []);
+}
+
 function propTitle(properties) {
   return firstText(properties.Title?.title || []);
 }
@@ -136,7 +154,7 @@ function normalizeCategory(value) {
 }
 
 async function notion(pathname, options = {}) {
-  const response = await fetch(`https://api.notion.com/v1${pathname}`, {
+  const response = await fetchWithTimeout(`https://api.notion.com/v1${pathname}`, {
     ...options,
     headers: {
       Authorization: `Bearer ${required("NOTION_TOKEN")}`,
@@ -208,8 +226,45 @@ function textFromBlock(block) {
   return firstText(value?.rich_text || []);
 }
 
+function textBlockType(type) {
+  if (
+    [
+      "paragraph",
+      "heading_1",
+      "heading_2",
+      "heading_3",
+      "bulleted_list_item",
+      "numbered_list_item",
+      "quote",
+      "callout",
+      "code",
+    ].includes(type)
+  ) {
+    return type;
+  }
+  return "paragraph";
+}
+
+function textBlockSize(type) {
+  if (type === "heading_1") return "xl";
+  if (type === "heading_2") return "lg";
+  if (type === "heading_3") return "md";
+  return "md";
+}
+
+function textBlockWeight(type) {
+  return type.startsWith("heading") ? "bold" : "normal";
+}
+
+function calloutIcon(block) {
+  const icon = block.callout?.icon;
+  if (!icon) return "";
+  if (icon.type === "emoji") return icon.emoji || "";
+  return "";
+}
+
 async function download(url) {
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     throw new Error(`Download failed ${response.status}: ${body}`);
@@ -236,7 +291,7 @@ async function uploadBuffer(buffer, contentType, objectKey) {
     .update(stringToSign)
     .digest("base64");
   const url = `https://${bucket}.${endpoint}/${encodePath(objectKey)}`;
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: "PUT",
     headers: {
       Authorization: `OSS ${accessKeyId}:${signature}`,
@@ -257,6 +312,10 @@ async function uploadBuffer(buffer, contentType, objectKey) {
 }
 
 async function uploadRemoteMedia(url, prefix, label, index) {
+  if (!url) {
+    throw new Error(`Missing media URL for ${prefix}/${label}-${index}`);
+  }
+  console.log(`  Downloading ${label} ${index + 1}: ${url.slice(0, 96)}`);
   const { buffer, contentType } = await download(url);
   const fallbackExt = extFromContentType(contentType);
   const ext = extensionFromUrl(url, fallbackExt) || fallbackExt;
@@ -268,7 +327,10 @@ async function uploadRemoteMedia(url, prefix, label, index) {
   ]
     .filter(Boolean)
     .join("/");
-  return uploadBuffer(buffer, contentType, objectKey);
+  console.log(`  Uploading ${label} ${index + 1}: ${objectKey}`);
+  const uploaded = await uploadBuffer(buffer, contentType, objectKey);
+  console.log(`  Uploaded ${label} ${index + 1}`);
+  return uploaded;
 }
 
 async function uploadJson(content) {
@@ -284,7 +346,7 @@ async function uploadJson(content) {
 
 async function fetchPublishedContent() {
   const url = process.env.VITE_CONTENT_URL || DEFAULT_CONTENT_URL;
-  const response = await fetch(`${url}?t=${Date.now()}`);
+  const response = await fetchWithTimeout(`${url}?t=${Date.now()}`);
   if (!response.ok) {
     throw new Error(`Could not fetch published content ${response.status}`);
   }
@@ -355,60 +417,17 @@ async function buildEntry(page) {
   const categories = propMulti(page.properties, "Category").map(normalizeCategory);
   const blocks = await listBlocks(page.id);
 
-  let mediaIndex = 1;
-  const richContent = [];
+  const mediaState = { index: 1 };
   const galleryImages = [];
   const videos = [];
-  const textParts = [];
-
-  for (const block of blocks) {
-    if (["paragraph", "heading_1", "heading_2", "heading_3", "quote"].includes(block.type)) {
-      const value = textFromBlock(block).trim();
-      if (!value) continue;
-      textParts.push(value);
-      richContent.push({
-        id: `${block.id.replace(/-/g, "").slice(0, 12)}`,
-        type: "text",
-        value,
-        size: block.type.startsWith("heading") ? "lg" : "md",
-        weight: block.type.startsWith("heading") ? "bold" : "normal",
-      });
-    }
-
-    if (block.type === "image") {
-      const uploaded = await uploadRemoteMedia(
-        mediaUrl(block),
-        prefix,
-        "image",
-        mediaIndex++,
-      );
-      galleryImages.push(uploaded);
-      richContent.push({
-        id: `${block.id.replace(/-/g, "").slice(0, 12)}`,
-        type: "image",
-        value: uploaded,
-        width: "wide",
-        align: "center",
-      });
-    }
-
-    if (block.type === "video") {
-      const uploaded = await uploadRemoteMedia(
-        mediaUrl(block),
-        prefix,
-        "video",
-        mediaIndex++,
-      );
-      videos.push(uploaded);
-      richContent.push({
-        id: `${block.id.replace(/-/g, "").slice(0, 12)}`,
-        type: "video",
-        value: uploaded,
-        width: "wide",
-        align: "center",
-      });
-    }
-  }
+  const richContent = (
+    await Promise.all(
+      blocks.map((block) =>
+        notionBlockToRichBlock(block, prefix, mediaState, galleryImages, videos),
+      ),
+    )
+  ).filter(Boolean);
+  const textParts = collectText(richContent);
 
   const coverFile = propFiles(page.properties, "Cover")[0];
   let coverImage = galleryImages[0] || "";
@@ -462,6 +481,100 @@ async function buildEntry(page) {
       sortOrder: 1,
     },
   };
+}
+
+async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, videos) {
+  const id = block.id.replace(/-/g, "").slice(0, 24);
+
+  if (block.type === "unsupported" || block.archived || block.in_trash) {
+    return null;
+  }
+
+  if (block.type === "divider") {
+    return { id, type: "divider", value: "" };
+  }
+
+  if (block.type === "image" || block.type === "video") {
+    const uploaded = await uploadRemoteMedia(
+      mediaUrl(block),
+      prefix,
+      block.type,
+      mediaState.index++,
+    );
+    if (block.type === "image") galleryImages.push(uploaded);
+    if (block.type === "video") videos.push(uploaded);
+    return {
+      id,
+      type: block.type,
+      value: uploaded,
+      caption: captionText(block[block.type]),
+      width: "wide",
+      align: "center",
+    };
+  }
+
+  if (block.type === "bookmark" || block.type === "embed") {
+    const value = block[block.type]?.url || "";
+    return {
+      id,
+      type: block.type,
+      value,
+      url: value,
+      width: "wide",
+    };
+  }
+
+  const isTextLike = [
+    "paragraph",
+    "heading_1",
+    "heading_2",
+    "heading_3",
+    "bulleted_list_item",
+    "numbered_list_item",
+    "quote",
+    "callout",
+    "code",
+  ].includes(block.type);
+
+  if (!isTextLike) {
+    return null;
+  }
+
+  const children = block.has_children
+    ? (
+        await Promise.all(
+          (await listBlocks(block.id)).map((child) =>
+            notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
+          ),
+        )
+      ).filter(Boolean)
+    : undefined;
+
+  return {
+    id,
+    type: textBlockType(block.type),
+    value: textFromBlock(block).trim(),
+    language: block.type === "code" ? block.code?.language : undefined,
+    icon: block.type === "callout" ? calloutIcon(block) : undefined,
+    children,
+    size: textBlockSize(block.type),
+    weight: textBlockWeight(block.type),
+    width: "wide",
+  };
+}
+
+function collectText(blocks) {
+  const output = [];
+  const walk = (items) => {
+    for (const item of items || []) {
+      if (item.value && !["image", "video", "bookmark", "embed"].includes(item.type)) {
+        output.push(item.value);
+      }
+      if (item.children?.length) walk(item.children);
+    }
+  };
+  walk(blocks);
+  return output;
 }
 
 async function markSynced(pageId) {

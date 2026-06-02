@@ -10,6 +10,7 @@ import { About } from "./components/About";
 import { StudioLocked } from "./components/StudioLocked";
 import { StudioUnlocked } from "./components/StudioUnlocked";
 import { Loader } from "./components/Loader";
+import { CopyrightProtection } from "./components/CopyrightProtection";
 import { useContent } from "./contentStore";
 
 export type Route =
@@ -223,6 +224,7 @@ export default function App() {
           }}
         />
       )}
+      <CopyrightProtection disabled={route.startsWith("studio")} />
       <div ref={glowRef} className="cursor-glow" />
       <div className="relative z-10">
         <Nav

@@ -1342,12 +1342,27 @@ function textToRichBlocks(value?: string): RichBlock[] {
     .filter(Boolean)
     .map((paragraph, index) => ({
       id: `legacy-${index}`,
-      type: "text",
+      type: "paragraph",
       value: paragraph,
       align: "left",
       size: "md",
       width: "wide",
     }));
+}
+
+function isEditableTextBlock(block: RichBlock) {
+  return [
+    "text",
+    "paragraph",
+    "heading_1",
+    "heading_2",
+    "heading_3",
+    "bulleted_list_item",
+    "numbered_list_item",
+    "quote",
+    "callout",
+    "code",
+  ].includes(block.type);
 }
 
 function RichContentEditor({
@@ -1489,12 +1504,26 @@ function RichContentEditor({
               />
             </div>
 
-            {block.type === "text" && (
+            {isEditableTextBlock(block) && (
               <textarea
                 value={block.value}
                 onChange={(event) => updateBlock(block.id, { value: event.target.value })}
                 className={`${richBlockClass(block)} min-h-[120px] resize-y outline-none whitespace-pre-wrap px-3 py-4 bg-transparent`}
                 style={richBlockStyle(block)}
+              />
+            )}
+
+            {block.type === "divider" && (
+              <div className="px-3 py-8">
+                <hr className="border-[color:var(--line)]" />
+              </div>
+            )}
+
+            {(block.type === "bookmark" || block.type === "embed") && (
+              <Field
+                label={block.type}
+                value={block.value}
+                onChange={(value) => updateBlock(block.id, { value, url: value })}
               />
             )}
 
@@ -1565,7 +1594,7 @@ function BlockToolbar({
       <button type="button" onClick={onMoveDown} disabled={!canMoveDown} className={buttonClass} title="Move down">
         <ArrowDown className="w-4 h-4" />
       </button>
-      {block.type === "text" && (
+      {isEditableTextBlock(block) && (
         <>
           <select value={block.size ?? "md"} onChange={(event) => onChange({ size: event.target.value as RichBlock["size"] })} className={selectClass}>
             <option value="sm">Small</option>
@@ -1603,6 +1632,9 @@ function BlockToolbar({
 function richBlockClass(block: RichBlock) {
   const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
   const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
+  if (block.type === "heading_1") return `${width} ${align} text-3xl font-semibold`;
+  if (block.type === "heading_2") return `${width} ${align} text-2xl font-semibold`;
+  if (block.type === "heading_3") return `${width} ${align} text-xl font-semibold`;
   const size =
     block.size === "xl"
       ? "text-3xl"

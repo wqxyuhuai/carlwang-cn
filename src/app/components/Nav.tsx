@@ -24,10 +24,10 @@ export function Nav({
   return (
     <header className="sticky top-0 z-40">
       <div className="absolute left-0 right-0 top-0 h-[76px] pointer-events-none frosted-bar border-b border-[color:var(--line-soft)]" />
-      <div className="content-shell relative h-[76px] flex items-center justify-between">
+      <div className="content-shell relative grid h-[76px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
         <button
           onClick={() => go("home")}
-          className="flex items-center gap-2.5 group"
+          className="group flex items-center gap-2.5 justify-self-start"
         >
           <span className="tracking-tight text-[var(--fg)]">Carl Wang</span>
           <span className="text-[var(--muted-2)] text-sm hidden sm:inline">
@@ -35,7 +35,7 @@ export function Nav({
           </span>
         </button>
 
-        <nav className="flex items-center gap-0.5">
+        <nav className="flex items-center gap-1 justify-self-center">
           {items.map((it) => {
             const active =
               route === it.route ||
@@ -45,7 +45,7 @@ export function Nav({
               <button
                 key={it.route}
                 onClick={() => go(it.route)}
-                className={`px-4 h-9 rounded-full text-sm transition-colors ${
+                className={`h-9 w-[78px] rounded-full text-center text-sm transition-colors ${
                   active
                     ? "bg-[var(--fg)] text-[var(--app-bg)]"
                     : "text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[color:var(--hover)]"
@@ -59,7 +59,7 @@ export function Nav({
             onClick={() =>
               go(studioUnlocked ? "studio-unlocked" : "studio-locked")
             }
-            className={`px-4 h-9 rounded-full text-sm flex items-center gap-1.5 transition-colors ${
+            className={`flex h-9 w-[94px] items-center justify-center gap-1.5 rounded-full text-sm transition-colors ${
               route.startsWith("studio")
                 ? "bg-[var(--fg)] text-[var(--app-bg)]"
                 : "text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[color:var(--hover)]"
@@ -70,7 +70,7 @@ export function Nav({
           </button>
         </nav>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 justify-self-end">
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"

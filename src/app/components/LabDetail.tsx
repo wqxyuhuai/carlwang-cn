@@ -1,7 +1,7 @@
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
-import type { RichBlock } from "../data";
+import { NotionContentView, textToRichBlocks } from "./NotionContent";
 
 export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
   const { content } = useContent();
@@ -55,7 +55,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
       </section>
 
       <section className="content-shell py-12">
-        <RichContentView blocks={blocks} />
+        <NotionContentView blocks={blocks} />
       </section>
 
       <section className="content-shell py-16">
@@ -66,78 +66,6 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
           Back to Lab
         </button>
       </section>
-    </div>
-  );
-}
-
-function textToRichBlocks(value: string): RichBlock[] {
-  return value
-    .split(/\n+/)
-    .filter(Boolean)
-    .map((paragraph, index) => ({
-      id: `paragraph-${index}`,
-      type: "text",
-      value: paragraph,
-      align: "left",
-      size: "md",
-      width: "wide",
-    }));
-}
-
-function RichContentView({ blocks }: { blocks: RichBlock[] }) {
-  return (
-    <div className="space-y-8">
-      {blocks.map((block) => {
-        const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
-        const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
-        const size =
-          block.size === "xl"
-            ? "text-3xl"
-            : block.size === "lg"
-              ? "text-2xl"
-              : block.size === "sm"
-                ? "text-sm"
-                : "text-base";
-        const style = {
-          color: block.color,
-          fontFamily: block.fontFamily,
-          fontWeight: block.weight === "bold" ? 700 : block.weight === "medium" ? 500 : 400,
-          fontStyle: block.italic ? "italic" : undefined,
-          textDecoration: block.underline ? "underline" : undefined,
-          lineHeight: 1.75,
-        };
-
-        if (!block.value) return null;
-        if (block.type === "image") {
-          return (
-            <img
-              key={block.id}
-              src={block.value}
-              alt=""
-              className={`${width} ${align} object-cover media-rounded`}
-            />
-          );
-        }
-        if (block.type === "video") {
-          return (
-            <video
-              key={block.id}
-              src={block.value}
-              controls
-              className={`${width} ${align} aspect-video object-cover media-rounded`}
-            />
-          );
-        }
-        return (
-          <p
-            key={block.id}
-            className={`${width} ${align} ${size} whitespace-pre-wrap`}
-            style={style}
-          >
-            {block.value}
-          </p>
-        );
-      })}
     </div>
   );
 }

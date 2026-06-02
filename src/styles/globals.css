@@ -185,6 +185,17 @@ body {
   background: var(--surface);
 }
 
+img,
+video,
+.protected-media {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+video::-internal-media-controls-download-button {
+  display: none;
+}
+
 /* card with subtle inner highlight (linear/apple flavor) */
 .card {
   position: relative;

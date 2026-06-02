@@ -1,7 +1,27 @@
 export type RichBlock = {
   id: string;
-  type: "text" | "image" | "video";
+  type:
+    | "text"
+    | "paragraph"
+    | "heading_1"
+    | "heading_2"
+    | "heading_3"
+    | "bulleted_list_item"
+    | "numbered_list_item"
+    | "quote"
+    | "callout"
+    | "code"
+    | "divider"
+    | "bookmark"
+    | "embed"
+    | "image"
+    | "video";
   value: string;
+  caption?: string;
+  language?: string;
+  icon?: string;
+  url?: string;
+  children?: RichBlock[];
   align?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg" | "xl";
   width?: "full" | "wide" | "half";
