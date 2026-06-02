@@ -176,12 +176,51 @@ function uid(prefix: string) {
     .slice(2, 7)}`;
 }
 
+function normalizeItemId(item: { id?: string; slug?: string; title?: string }, prefix: string) {
+  if (item.id && item.id !== "notion-3736cfcdf85b") return item.id;
+  const source = item.slug || item.title || prefix;
+  return `${prefix}-${source
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || Date.now().toString(36)}`;
+}
+
 function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
+  const projects = (value?.projects?.length ? value.projects : defaultContent.projects).map(
+    (project, index) => {
+      const { description: _description, role: _role, ...rest } = project as Project & {
+        description?: string;
+        role?: string;
+      };
+      return {
+        ...rest,
+        id: normalizeItemId(project, "work"),
+        slug: project.slug || normalizeItemId(project, "work"),
+        sortOrder: project.sortOrder ?? index + 1,
+      };
+    },
+  );
+  const lab = (value?.labItems?.length ? value.labItems : defaultContent.labItems).map((item) => {
+    const { description: _description, techStack: _techStack, ...rest } = item as LabItem & {
+      description?: string;
+      techStack?: string;
+    };
+    return {
+      ...rest,
+      id: normalizeItemId(item, "lab"),
+      slug: item.slug || normalizeItemId(item, "lab"),
+      hidden: item.hidden ?? false,
+      featured: !!item.featured,
+    };
+  });
+
   return {
     ...defaultContent,
     ...value,
-    projects: value?.projects?.length ? value.projects : defaultContent.projects,
-    labItems: value?.labItems?.length ? value.labItems : defaultContent.labItems,
+    projects,
+    labItems: lab,
     socials: defaultContent.socials,
     capabilities: value?.capabilities?.length
       ? value.capabilities
@@ -252,10 +291,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       content,
       saveProject(project) {
         setContent((current) => {
+          const { description: _description, role: _role, ...cleanProject } = project as Project & {
+            description?: string;
+            role?: string;
+          };
           const next = {
-            ...project,
-            id: project.id || uid("project"),
-            slug: project.slug || project.id || uid("project"),
+            ...cleanProject,
+            id: cleanProject.id || uid("project"),
+            slug: cleanProject.slug || cleanProject.id || uid("project"),
           };
           const exists = current.projects.some((item) => item.id === next.id);
           return {
@@ -276,10 +319,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       },
       saveLabItem(item) {
         setContent((current) => {
+          const { description: _description, techStack: _techStack, ...cleanItem } = item as LabItem & {
+            description?: string;
+            techStack?: string;
+          };
           const next = {
-            ...item,
-            id: item.id || uid("lab"),
-            slug: item.slug || item.id || uid("lab"),
+            ...cleanItem,
+            id: cleanItem.id || uid("lab"),
+            slug: cleanItem.slug || cleanItem.id || uid("lab"),
           };
           const exists = current.labItems.some((entry) => entry.id === next.id);
           return {

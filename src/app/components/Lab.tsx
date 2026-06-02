@@ -13,7 +13,7 @@ export function Lab({ openLab }: { openLab: (id: string) => void }) {
 
   return (
     <div>
-      <section className="mx-auto max-w-[1680px] px-8 pt-20 pb-10">
+      <section className="content-shell pt-20 pb-10">
         <h1 className="text-[var(--fg)] text-4xl font-semibold tracking-tight">
           Lab
         </h1>
@@ -21,7 +21,7 @@ export function Lab({ openLab }: { openLab: (id: string) => void }) {
 
       <section className="sticky top-[76px] z-30">
         <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none frosted-bar border-b border-[color:var(--line-soft)]" />
-        <div className="relative mx-auto max-w-[1680px] px-8 py-4 flex items-center gap-2 flex-wrap">
+        <div className="content-shell relative py-4 flex items-center gap-2 flex-wrap">
           {labCategories.map((c) => (
             <button
               key={c}
@@ -38,7 +38,7 @@ export function Lab({ openLab }: { openLab: (id: string) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1680px] px-8 py-10 grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <section className="content-shell py-10 grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((it) => (
           <button
             key={it.id}

@@ -4,6 +4,8 @@
 
 :root,
 .theme-dark {
+  --content-max: 1160px;
+  --content-pad: 32px;
   --accent: #b6cf74;
   --accent-soft: rgba(182, 207, 116, 0.16);
   --accent-glow: rgba(182, 207, 116, 0.35);
@@ -34,6 +36,20 @@
   --blob-1: rgba(182, 207, 116, 0.22);
   --blob-2: rgba(99, 102, 241, 0.14);
   --blob-3: rgba(244, 114, 182, 0.10);
+}
+
+.content-shell {
+  width: min(var(--content-max), calc(100vw - var(--content-pad) * 2));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 720px) {
+  :root,
+  .theme-dark,
+  .theme-light {
+    --content-pad: 20px;
+  }
 }
 
 .theme-light {

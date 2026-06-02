@@ -309,10 +309,47 @@ function removePlaceholderContent(content) {
   return projectCount !== content.projects.length || labCount !== content.labItems.length;
 }
 
+function slugLike(value, fallback) {
+  return slugify(value, fallback);
+}
+
+function migratePublishedContent(content) {
+  let changed = false;
+  content.projects = content.projects.map((project) => {
+    const { description: _description, role: _role, ...rest } = project;
+    const next = { ...rest };
+    if (project.description !== undefined || project.role !== undefined) changed = true;
+    if (next.id === "notion-3736cfcdf85b") {
+      next.id = `work-${slugLike(next.slug || next.title, "item")}`;
+      changed = true;
+    }
+    if (!next.slug) {
+      next.slug = slugLike(next.title, next.id);
+      changed = true;
+    }
+    return next;
+  });
+  content.labItems = content.labItems.map((item) => {
+    const { description: _description, techStack: _techStack, ...rest } = item;
+    const next = { ...rest };
+    if (item.description !== undefined || item.techStack !== undefined) changed = true;
+    if (next.id === "notion-3736cfcdf85b") {
+      next.id = `lab-${slugLike(next.slug || next.title, "item")}`;
+      changed = true;
+    }
+    if (!next.slug) {
+      next.slug = slugLike(next.title, next.id);
+      changed = true;
+    }
+    return next;
+  });
+  return changed;
+}
+
 async function buildEntry(page) {
   const title = propTitle(page.properties);
   const type = propSelect(page.properties, "Type");
-  const idBase = page.id.replace(/-/g, "").slice(0, 12);
+  const idBase = page.id.replace(/-/g, "").slice(0, 24);
   const slug = slugify(title, `notion-${idBase}`);
   const prefix = `${type.toLowerCase()}/${slug}`;
   const categories = propMulti(page.properties, "Category").map(normalizeCategory);
@@ -380,11 +417,6 @@ async function buildEntry(page) {
     coverImage = await uploadRemoteMedia(coverUrl, prefix, "cover", 0);
   }
 
-  const description =
-    textParts.find((part) => /[\u4e00-\u9fff]/.test(part)) ||
-    textParts[0] ||
-    title;
-
   if (type === "Lab") {
     return {
       kind: "lab",
@@ -394,7 +426,6 @@ async function buildEntry(page) {
         title,
         type: categories[0] || "Notes",
         status: propSelect(page.properties, "Status") || "Idea",
-        description,
         coverImage,
         github: propUrl(page.properties, "GitHub URL") || undefined,
         demo: propUrl(page.properties, "Demo URL") || undefined,
@@ -420,8 +451,6 @@ async function buildEntry(page) {
       title,
       category: categories[0] || "Other",
       year: propNumber(page.properties, "Year"),
-      role: categories[0] || "Design",
-      description,
       content: textParts.join("\n\n"),
       richContent,
       coverImage,
@@ -459,6 +488,7 @@ async function main() {
   content.projects = Array.isArray(content.projects) ? content.projects : [];
   content.labItems = Array.isArray(content.labItems) ? content.labItems : [];
   const removedPlaceholders = removePlaceholderContent(content);
+  const migratedContent = migratePublishedContent(content);
 
   for (const page of pages) {
     const title = propTitle(page.properties);
@@ -473,7 +503,7 @@ async function main() {
     console.log(`Marked synced: ${title}`);
   }
 
-  if (!pages.length && !removedPlaceholders) {
+  if (!pages.length && !removedPlaceholders && !migratedContent) {
     console.log("Nothing to upload.");
     return;
   }

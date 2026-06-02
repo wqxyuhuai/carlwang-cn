@@ -18,8 +18,6 @@ export type Project = {
   title: string;
   category: string;
   year: number;
-  role: string;
-  description: string;
   content?: string;
   richContent?: RichBlock[];
   coverImage?: string;
@@ -51,11 +49,9 @@ export type LabItem = {
   title: string;
   type: string;
   status: "Live" | "Building" | "Idea" | "Archived";
-  description: string;
   coverImage?: string;
   github?: string;
   demo?: string;
-  techStack?: string;
   content?: string;
   richContent?: RichBlock[];
   galleryImages?: string[];

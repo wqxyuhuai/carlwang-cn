@@ -41,7 +41,7 @@ export function Home({
   return (
     <div>
       <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-[1440px] px-10 pt-24 pb-24 relative">
+        <div className="content-shell pt-24 pb-24 relative">
           <div className="reveal reveal-1 text-[var(--muted)] text-sm mb-12">
             Available for select projects
           </div>
@@ -70,7 +70,7 @@ export function Home({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 py-20 relative">
+      <section className="content-shell py-20 relative">
         <SectionHeader
           title="Work"
           link="See all"
@@ -102,7 +102,7 @@ export function Home({
                     {p.title}
                   </div>
                   <p className="text-[var(--muted)] text-sm leading-relaxed line-clamp-2">
-                    {p.description}
+                    {summaryFromRichContent(p.richContent, p.content)}
                   </p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export function Home({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 py-20 relative">
+      <section className="content-shell py-20 relative">
         <SectionHeader
           title="Lab"
           link="Enter Lab"
@@ -149,7 +149,7 @@ export function Home({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-10 py-20 relative">
+      <section className="content-shell py-20 relative">
         <SectionHeader
           title="About"
           link="More info"
@@ -186,9 +186,8 @@ export function Home({
                 {["Product & UI", "Visual & Brand", "Motion & Video"].map((f) => (
                   <div
                     key={f}
-                    className="text-[var(--fg)] flex items-center gap-3"
+                    className="text-[var(--fg)]"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                     {f}
                   </div>
                 ))}
@@ -199,6 +198,17 @@ export function Home({
       </section>
     </div>
   );
+}
+
+function summaryFromRichContent(
+  blocks?: { type: string; value: string }[],
+  fallback?: string,
+) {
+  const text =
+    blocks?.find((block) => block.type === "text" && block.value.trim())?.value ||
+    fallback ||
+    "";
+  return text.replace(/\s+/g, " ").trim();
 }
 
 function SectionHeader({

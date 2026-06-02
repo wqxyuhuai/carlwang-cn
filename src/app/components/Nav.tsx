@@ -24,7 +24,7 @@ export function Nav({
   return (
     <header className="sticky top-0 z-40">
       <div className="absolute left-0 right-0 top-0 h-[76px] pointer-events-none frosted-bar border-b border-[color:var(--line-soft)]" />
-      <div className="relative mx-auto max-w-[1440px] px-10 h-[76px] flex items-center justify-between">
+      <div className="content-shell relative h-[76px] flex items-center justify-between">
         <button
           onClick={() => go("home")}
           className="flex items-center gap-2.5 group"

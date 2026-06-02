@@ -67,12 +67,11 @@ export function StudioUnlocked({
   ];
 
   return (
-    <div className="mx-auto max-w-[1440px] px-10 py-12 relative">
+    <div className="content-shell py-12 relative">
       <div className="flex items-end justify-between mb-10">
         <div>
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            Studio 路 Owner Mode
+          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-3">
+            Studio - Owner Mode
           </div>
           <h1
             className="display text-[var(--fg)]" style={{ fontSize: 80, lineHeight: 0.96 }}
@@ -393,9 +392,8 @@ function ProjectForm({
     title: initial?.title ?? "",
     category: initial?.category ?? "App / UI",
     year: initial?.year ?? 2026,
-    description: initial?.description ?? "",
     content: initial?.content ?? "",
-    richContent: initial?.richContent ?? textToRichBlocks(initial?.content),
+    richContent: ensureUniqueBlocks(initial?.richContent ?? textToRichBlocks(initial?.content)),
     coverImage: initial?.coverImage ?? "",
     galleryImages: initial?.galleryImages ?? [],
     videoUrl: initial?.videoUrl ?? "",
@@ -418,8 +416,6 @@ function ProjectForm({
           title: f.title,
           category: f.category,
           year: f.year,
-          role: initial?.role ?? f.category,
-          description: f.description,
           content: f.content,
           richContent: f.richContent,
           coverImage: f.coverImage,
@@ -468,7 +464,7 @@ function ProjectForm({
           </div>
         </aside>
       </div>
-      <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-[color:var(--line)]">
+      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur">
         <button
           type="button"
           onClick={onCancel}
@@ -513,11 +509,19 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
             key={it.id}
             className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 flex gap-4"
           >
-            <div className="w-20 h-20 rounded-lg bg-[color:var(--surface-2)] flex-shrink-0" />
+            <div className="w-24 h-24 rounded-lg bg-[color:var(--surface-2)] flex-shrink-0 overflow-hidden">
+              {it.coverImage && (
+                <img
+                  src={it.coverImage}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[var(--fg)] truncate">{it.title}</span>
-                <span className="text-xs text-[var(--muted-2)]">路 {it.type}</span>
+                <span className="text-xs text-[var(--muted-2)]">- {it.type}</span>
               </div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="px-2 py-0.5 rounded-full text-xs bg-[color:var(--accent-soft)] text-[var(--accent)]">
@@ -535,13 +539,14 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
                 )}
               </div>
               <p className="text-[var(--muted)] text-sm line-clamp-2">
-                {it.description}
+                {summaryFromRichContent(it.richContent, it.content)}
               </p>
               <div className="flex gap-1 mt-3">
                 <IconBtn
                   onClick={() => toggleFeatured(it)}
                   icon={Star}
                   label={it.featured ? "Unfeature" : "Feature"}
+                  active={!!it.featured}
                 />
                 <IconBtn
                   onClick={() => setPanel({ id: it.id })}
@@ -604,12 +609,10 @@ function LabForm({
     title: initial?.title ?? "",
     type: initial?.type ?? "Web Tools",
     status: initial?.status ?? "Idea",
-    description: initial?.description ?? "",
     github: initial?.github ?? "",
     demo: initial?.demo ?? "",
-    techStack: initial?.techStack ?? "",
     content: initial?.content ?? "",
-    richContent: initial?.richContent ?? textToRichBlocks(initial?.content),
+    richContent: ensureUniqueBlocks(initial?.richContent ?? textToRichBlocks(initial?.content)),
     coverImage: initial?.coverImage ?? "",
     featured: !!initial?.featured,
   });
@@ -627,10 +630,8 @@ function LabForm({
           title: f.title,
           type: f.type,
           status: f.status as LabItem["status"],
-          description: f.description,
           github: f.github,
           demo: f.demo,
-          techStack: f.techStack,
           content: f.content,
           richContent: f.richContent,
           coverImage: f.coverImage,
@@ -672,11 +673,10 @@ function LabForm({
           </div>
           <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
           <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
-          <Field label="Tech Stack" value={f.techStack} onChange={(v) => setF({ ...f, techStack: v })} />
           <Toggle label="Featured" checked={f.featured} onChange={(v) => setF({ ...f, featured: v })} />
         </aside>
       </div>
-      <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-[color:var(--line)]">
+      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur">
         <button
           type="button"
           onClick={onCancel}
@@ -1322,6 +1322,19 @@ function createRichBlock(type: RichBlock["type"]): RichBlock {
   };
 }
 
+function ensureUniqueBlocks(blocks?: RichBlock[]) {
+  const source = blocks?.length ? blocks : [createRichBlock("text")];
+  const seen = new Set<string>();
+  return source.map((block, index) => {
+    const id =
+      block.id && !seen.has(block.id)
+        ? block.id
+        : `${block.id || "block"}-${index}`;
+    seen.add(id);
+    return { ...block, id };
+  });
+}
+
 function textToRichBlocks(value?: string): RichBlock[] {
   if (!value?.trim()) return [createRichBlock("text")];
   return value
@@ -1348,10 +1361,11 @@ function RichContentEditor({
   uploadPathPrefix: string;
   onChange: (blocks: RichBlock[]) => void;
 }) {
+  const safeBlocks = ensureUniqueBlocks(blocks);
   const [history, setHistory] = useState<RichBlock[][]>([]);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const commitChange = (next: RichBlock[]) => {
-    setHistory((items) => [...items.slice(-19), blocks]);
+    setHistory((items) => [...items.slice(-19), safeBlocks]);
     onChange(next);
   };
   const undo = () => {
@@ -1361,13 +1375,13 @@ function RichContentEditor({
     onChange(previous);
   };
   const updateBlock = (id: string, patch: Partial<RichBlock>) =>
-    commitChange(blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
-  const addBlock = (type: RichBlock["type"]) => commitChange([...blocks, createRichBlock(type)]);
+    commitChange(safeBlocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
+  const addBlock = (type: RichBlock["type"]) => commitChange([...safeBlocks, createRichBlock(type)]);
   const removeBlock = (id: string) =>
-    commitChange(blocks.length > 1 ? blocks.filter((block) => block.id !== id) : blocks);
+    commitChange(safeBlocks.length > 1 ? safeBlocks.filter((block) => block.id !== id) : safeBlocks);
   const moveBlock = (from: number, to: number) => {
-    if (from === to || to < 0 || to >= blocks.length) return;
-    const next = [...blocks];
+    if (from === to || to < 0 || to >= safeBlocks.length) return;
+    const next = [...safeBlocks];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
     commitChange(next);
@@ -1395,7 +1409,7 @@ function RichContentEditor({
         event.preventDefault();
         const images = await Promise.all(files.map(readClipboardImage));
         commitChange([
-          ...blocks,
+          ...safeBlocks,
           ...images.map((value) => ({
             ...createRichBlock("image"),
             value,
@@ -1430,7 +1444,7 @@ function RichContentEditor({
         </div>
       </div>
       <div className="space-y-4">
-        {blocks.map((block, index) => (
+        {safeBlocks.map((block, index) => (
           <div
             key={block.id}
             onDragOver={(event) => {
@@ -1471,20 +1485,17 @@ function RichContentEditor({
                 onMoveUp={() => moveBlock(index, index - 1)}
                 onMoveDown={() => moveBlock(index, index + 1)}
                 canMoveUp={index > 0}
-                canMoveDown={index < blocks.length - 1}
+                canMoveDown={index < safeBlocks.length - 1}
               />
             </div>
 
             {block.type === "text" && (
-              <div
-                contentEditable
-                suppressContentEditableWarning
-                onBlur={(event) => updateBlock(block.id, { value: event.currentTarget.innerText })}
-                className={`${richBlockClass(block)} min-h-[56px] outline-none whitespace-pre-wrap px-3 py-4`}
+              <textarea
+                value={block.value}
+                onChange={(event) => updateBlock(block.id, { value: event.target.value })}
+                className={`${richBlockClass(block)} min-h-[120px] resize-y outline-none whitespace-pre-wrap px-3 py-4 bg-transparent`}
                 style={richBlockStyle(block)}
-              >
-                {block.value}
-              </div>
+              />
             )}
 
             {block.type === "image" && (
@@ -1593,7 +1604,13 @@ function richBlockClass(block: RichBlock) {
   const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
   const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
   const size =
-    block.size === "xl" ? "text-5xl" : block.size === "lg" ? "text-3xl" : block.size === "sm" ? "text-base" : "text-xl";
+    block.size === "xl"
+      ? "text-3xl"
+      : block.size === "lg"
+        ? "text-2xl"
+        : block.size === "sm"
+          ? "text-sm"
+          : "text-base";
   return `${width} ${align} ${size}`;
 }
 
@@ -1613,25 +1630,37 @@ function IconBtn({
   icon: Icon,
   label,
   danger,
+  active,
 }: {
   onClick: () => void;
   icon: any;
   label: string;
   danger?: boolean;
+  active?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       title={label}
       className={`w-8 h-8 rounded-lg grid place-items-center transition-colors ${
-        danger
+        active
+          ? "bg-amber-400/20 text-amber-500"
+          : danger
           ? "text-rose-500 hover:bg-rose-500/10"
           : "text-[var(--muted)] hover:bg-[color:var(--hover)] hover:text-[var(--fg)]"
       }`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-4 h-4" fill={active ? "currentColor" : "none"} />
     </button>
   );
+}
+
+function summaryFromRichContent(blocks?: RichBlock[], fallback?: string) {
+  const text =
+    blocks?.find((block) => block.type === "text" && block.value.trim())?.value ||
+    fallback ||
+    "";
+  return text.replace(/\s+/g, " ").trim();
 }
 
 function Field({

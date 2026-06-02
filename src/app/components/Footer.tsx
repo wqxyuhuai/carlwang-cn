@@ -15,19 +15,19 @@ export function Footer() {
   const { socials, settings } = content;
 
   return (
-    <footer className="border-t border-[color:var(--line-soft)] mt-32">
-      <div className="mx-auto max-w-[1440px] px-10 py-16 grid grid-cols-12 gap-8">
-        <div className="col-span-5">
+    <footer className="border-t border-[color:var(--line-soft)] mt-24">
+      <div className="content-shell py-14 grid grid-cols-12 gap-8">
+        <div className="col-span-12 md:col-span-5">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
             Based in Wuxi
           </div>
-          <div className="display text-[var(--fg)] text-5xl leading-tight">
+          <div className="display text-[var(--fg)] text-4xl leading-tight">
             {settings.name}
             <br />
             <span className="text-[var(--muted-2)]">Personal Hub</span>
           </div>
         </div>
-        <div className="col-span-4">
+        <div className="col-span-12 md:col-span-4">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
             Elsewhere
           </div>
@@ -50,7 +50,7 @@ export function Footer() {
             })}
           </ul>
         </div>
-        <div className="col-span-3">
+        <div className="col-span-12 md:col-span-3">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
             Colophon
           </div>
@@ -59,8 +59,8 @@ export function Footer() {
           </p>
         </div>
       </div>
-      <div className="mx-auto max-w-[1440px] px-10 py-6 flex items-center justify-between border-t border-[color:var(--line-soft)] text-[var(--muted-2)] text-xs">
-        <span>{settings.name} Studio — Wuxi / Remote</span>
+      <div className="content-shell py-6 flex items-center justify-between border-t border-[color:var(--line-soft)] text-[var(--muted-2)] text-xs">
+        <span>{settings.name} Studio - Wuxi / Remote</span>
         <span>configurable prototype</span>
       </div>
     </footer>

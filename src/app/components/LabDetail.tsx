@@ -9,17 +9,17 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
   const item = labItems.find((l) => l.id === id) ?? labItems[0];
 
   if (!item) {
-    return <div className="px-10 py-24 text-[var(--muted)]">Lab item not found.</div>;
+    return <div className="content-shell py-24 text-[var(--muted)]">Lab item not found.</div>;
   }
 
   const blocks =
     item.richContent?.length
       ? item.richContent
-      : textToRichBlocks(item.content || item.description);
+      : textToRichBlocks(item.content || "");
 
   return (
     <div>
-      <section className="mx-auto max-w-[1680px] px-8 pt-10">
+      <section className="content-shell pt-10">
         <button
           onClick={() => go("lab")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
@@ -28,13 +28,10 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </button>
       </section>
 
-      <section className="mx-auto max-w-[960px] px-8 pt-14 pb-12 text-center">
+      <section className="content-shell pt-14 pb-12 text-center">
         <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight">
           {item.title}
         </h1>
-        <p className="text-[var(--fg-2)] text-lg leading-relaxed mt-5">
-          {item.description}
-        </p>
         <div className="flex justify-center gap-3 mt-7">
           {item.demo && (
             <a
@@ -57,22 +54,11 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1180px] px-8 py-16">
-        <div className="space-y-8">
-          <RichContentView blocks={blocks} />
-          {item.techStack && (
-            <div className="pt-4 flex flex-wrap gap-2">
-              {item.techStack.split(",").map((tech) => (
-                <span key={tech} className="px-3 py-1.5 rounded-full bg-[color:var(--hover)] text-[var(--fg-2)] text-sm">
-                  {tech.trim()}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+      <section className="content-shell py-12">
+        <RichContentView blocks={blocks} />
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-8 py-16">
+      <section className="content-shell py-16">
         <button
           onClick={() => go("lab")}
           className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)]"
@@ -100,18 +86,18 @@ function textToRichBlocks(value: string): RichBlock[] {
 
 function RichContentView({ blocks }: { blocks: RichBlock[] }) {
   return (
-    <div>
+    <div className="space-y-8">
       {blocks.map((block) => {
         const align = block.align === "center" ? "text-center mx-auto" : block.align === "right" ? "text-right ml-auto" : "text-left";
         const width = block.width === "half" ? "max-w-[520px]" : block.width === "wide" ? "max-w-[860px]" : "w-full";
         const size =
           block.size === "xl"
-            ? "text-5xl"
+            ? "text-3xl"
             : block.size === "lg"
-              ? "text-3xl"
+              ? "text-2xl"
               : block.size === "sm"
-                ? "text-base"
-                : "text-xl";
+                ? "text-sm"
+                : "text-base";
         const style = {
           color: block.color,
           fontFamily: block.fontFamily,
@@ -128,7 +114,7 @@ function RichContentView({ blocks }: { blocks: RichBlock[] }) {
               key={block.id}
               src={block.value}
               alt=""
-              className={`${width} ${align} object-cover`}
+              className={`${width} ${align} object-cover media-rounded`}
             />
           );
         }
@@ -138,7 +124,7 @@ function RichContentView({ blocks }: { blocks: RichBlock[] }) {
               key={block.id}
               src={block.value}
               controls
-              className={`${width} ${align} aspect-video object-cover`}
+              className={`${width} ${align} aspect-video object-cover media-rounded`}
             />
           );
         }

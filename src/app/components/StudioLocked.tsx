@@ -24,7 +24,7 @@ export function StudioLocked({
   const [error, setError] = useState("");
 
   return (
-    <div className="min-h-[calc(100vh-64px)] grid place-items-center px-10 py-24 relative overflow-hidden">
+    <div className="content-shell min-h-[calc(100vh-64px)] grid place-items-center py-24 relative overflow-hidden">
       <div className="w-full max-w-md">
         <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-2)] backdrop-blur p-10">
           <div className="w-12 h-12 rounded-full bg-[color:var(--hover)] border border-[color:var(--line)] grid place-items-center mb-6">
