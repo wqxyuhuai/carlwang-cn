@@ -1223,6 +1223,7 @@ function QRPreview({
 function SettingsTab({ toast }: { toast: (m: string) => void }) {
   const { content, saveSettings } = useContent();
   const [s, setS] = useState<SiteSettings>(content.settings);
+  const [testingOss, setTestingOss] = useState(false);
   const oss = s.oss ?? {
     enabled: false,
     bucket: "",
@@ -1282,6 +1283,35 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
           <Field label="Public base URL" value={oss.publicBaseUrl} onChange={(v) => setS({ ...s, oss: { ...oss, publicBaseUrl: v } })} placeholder="optional custom domain" />
           <Field label="AccessKey ID" value={oss.accessKeyId} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeyId: v } })} />
           <Field label="AccessKey Secret" type="password" value={oss.accessKeySecret} onChange={(v) => setS({ ...s, oss: { ...oss, accessKeySecret: v } })} />
+        </div>
+        <div className="flex items-center justify-between border-t border-[color:var(--line)] pt-4">
+          <div className="text-[var(--muted)] text-sm">
+            Test upload writes a small file to your OSS bucket.
+          </div>
+          <button
+            type="button"
+            disabled={testingOss}
+            onClick={async () => {
+              setTestingOss(true);
+              saveSettings(s);
+              try {
+                const file = new File(
+                  [`ok ${new Date().toISOString()}`],
+                  "oss-test.txt",
+                  { type: "text/plain" },
+                );
+                await uploadToOss(file, oss, "test", "oss-test.txt");
+                toast("OSS test upload succeeded");
+              } catch (error) {
+                toast(error instanceof Error ? error.message : "OSS test failed");
+              } finally {
+                setTestingOss(false);
+              }
+            }}
+            className="h-10 px-4 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)] disabled:opacity-50"
+          >
+            {testingOss ? "Testing..." : "Test OSS Upload"}
+          </button>
         </div>
       </div>
       <div className="col-span-2 flex justify-end">
@@ -1765,19 +1795,28 @@ function UploadBox({
     const files = Array.from(fileList);
     setStatus("Uploading...");
     try {
-      const dataUrls = canUploadToOss(content.settings.oss)
-        ? await Promise.all(files.map((file) => uploadToOss(file, content.settings.oss, pathPrefix)))
-        : await Promise.all(
-            files.map(
-              (file) =>
-                new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(String(reader.result));
-                  reader.onerror = () => reject(reader.error);
-                  reader.readAsDataURL(file);
-                }),
-            ),
-          );
+      const oss = content.settings.oss;
+      let dataUrls: string[];
+      if (oss?.enabled) {
+        if (!canUploadToOss(oss)) {
+          throw new Error("OSS is enabled but incomplete. Save bucket, endpoint, AccessKey ID and Secret.");
+        }
+        dataUrls = await Promise.all(
+          files.map((file) => uploadToOss(file, oss, pathPrefix)),
+        );
+      } else {
+        dataUrls = await Promise.all(
+          files.map(
+            (file) =>
+              new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(file);
+              }),
+          ),
+        );
+      }
       setStatus(`${files.length} file${files.length > 1 ? "s" : ""} attached`);
       onFiles?.(dataUrls);
     } catch (error) {
