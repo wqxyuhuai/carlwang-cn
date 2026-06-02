@@ -1233,6 +1233,10 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
     accessKeySecret: "",
     publicBaseUrl: "",
   };
+  const setSettings = (next: SiteSettings) => {
+    setS(next);
+    saveSettings(next);
+  };
   return (
     <form
       onSubmit={(e) => {
@@ -1273,7 +1277,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
           <Toggle
             label="Enable"
             checked={oss.enabled}
-            onChange={(enabled) => setS({ ...s, oss: { ...oss, enabled } })}
+            onChange={(enabled) => setSettings({ ...s, oss: { ...oss, enabled } })}
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -1759,14 +1763,15 @@ function Toggle({
       <span className="text-[var(--fg-2)] text-sm">{label}</span>
       <button
         type="button"
+        aria-pressed={checked}
         onClick={() => onChange(!checked)}
-        className={`w-10 h-6 rounded-full relative transition-colors ${
+        className={`grid h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
           checked ? "bg-[var(--accent)]" : "bg-[color:var(--surface-2)]"
         }`}
       >
         <span
-          className={`absolute top-0.5 w-5 h-5 rounded-full bg-[var(--fg)] transition-transform ${
-            checked ? "translate-x-[18px]" : "translate-x-0.5"
+          className={`block h-5 w-5 rounded-full bg-[var(--fg)] transition-all ${
+            checked ? "ml-auto" : "ml-0"
           }`}
         />
       </button>
