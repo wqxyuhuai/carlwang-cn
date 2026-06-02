@@ -31,113 +31,9 @@ export type Project = {
   sortOrder?: number;
 };
 
-export const featuredWork: Project[] = [
-  {
-    id: "wattdesk",
-    title: "WattDesk Cloud Platform",
-    category: "Product UI / SaaS",
-    year: 2025,
-    role: "Product Design, UI System",
-    description:
-      "Cloud platform for energy monitoring and diagnostics.",
-    featured: true,
-    status: "Published",
-  },
-  {
-    id: "imaster",
-    title: "iMaster Desktop Tool",
-    category: "Desktop App / Device Management",
-    year: 2025,
-    role: "Product Design",
-    description:
-      "Desktop tool for device configuration and management.",
-    featured: true,
-    status: "Published",
-  },
-  {
-    id: "energy-marketing",
-    title: "Energy Product Marketing System",
-    category: "Branding / Marketing",
-    year: 2025,
-    role: "Visual Direction",
-    description:
-      "Visual system for product launches and campaigns.",
-    featured: true,
-    status: "Published",
-  },
-  {
-    id: "motion-series",
-    title: "Product Motion Video Series",
-    category: "Video / Motion",
-    year: 2025,
-    role: "Motion Direction",
-    description:
-      "Video series explaining product features and scenarios.",
-    featured: true,
-    status: "Published",
-  },
-];
+export const featuredWork: Project[] = [];
 
-export const allWork: Project[] = [
-  ...featuredWork.map((p) => ({ ...p, category: mapWorkCat(p.title) })),
-  {
-    id: "wattcision",
-    title: "WattCision Business Series Launch",
-    category: "Marketing",
-    year: 2025,
-    role: "Campaign Design",
-    description: "Product launch campaign and visual system.",
-    status: "Published",
-  },
-  {
-    id: "ess-site",
-    title: "Energy Storage Product Website",
-    category: "Website",
-    year: 2024,
-    role: "Web Design",
-    description:
-      "Product website for commercial energy storage.",
-    status: "Published",
-  },
-  {
-    id: "bess-brochure",
-    title: "Commercial BESS Brochure System",
-    category: "Presentation",
-    year: 2025,
-    role: "Brochure Design",
-    description:
-      "Modular brochure system for battery products.",
-    status: "Published",
-  },
-  {
-    id: "brand-guideline",
-    title: "Brand Visual Guideline",
-    category: "Branding",
-    year: 2024,
-    role: "Visual Identity",
-    description:
-      "Brand identity system and templates.",
-    status: "Hidden",
-  },
-  {
-    id: "expo-pack",
-    title: "Exhibition Visual Package",
-    category: "Marketing",
-    year: 2025,
-    role: "Visual Design",
-    description:
-      "Exhibition booth and marketing materials.",
-    status: "Published",
-  },
-];
-
-function mapWorkCat(title: string) {
-  if (title.startsWith("WattDesk")) return "App / UI";
-  if (title.startsWith("iMaster")) return "App / UI";
-  if (title.includes("Marketing System")) return "Marketing";
-  if (title.includes("Motion")) return "Video / Motion";
-  return "Other";
-}
+export const allWork: Project[] = [];
 
 export const workCategories = [
   "All",
@@ -165,61 +61,11 @@ export type LabItem = {
   galleryImages?: string[];
   videoUrl?: string;
   externalUrl?: string;
+  featured?: boolean;
   hidden?: boolean;
 };
 
-export const labItems: LabItem[] = [
-  {
-    id: "gh-calendar",
-    title: "GitHub Calendar Project",
-    type: "GitHub",
-    status: "Live",
-    description:
-      "Calendar tool for personal schedules.",
-    github: "https://github.com",
-    demo: "#",
-  },
-  {
-    id: "gradient-gen",
-    title: "Random Gradient Generator",
-    type: "Web Tools",
-    status: "Building",
-    description:
-      "Gradient and color generator.",
-    demo: "#",
-  },
-  {
-    id: "link-toolkit",
-    title: "Link Toolkit",
-    type: "Web Tools",
-    status: "Idea",
-    description:
-      "Link management with QR codes.",
-  },
-  {
-    id: "ios-tips",
-    title: "iOS Tips Collection",
-    type: "Notes",
-    status: "Live",
-    description:
-      "iOS efficiency tips.",
-  },
-  {
-    id: "mini-prog",
-    title: "Mini Program Experiments",
-    type: "Mini Program",
-    status: "Idea",
-    description: "Personal utilities.",
-  },
-  {
-    id: "design-archive",
-    title: "Design Archive",
-    type: "Design Experiments",
-    status: "Building",
-    description:
-      "Design ideas and references.",
-  },
-];
+export const labItems: LabItem[] = [];
 
 export const labCategories = [
   "All",

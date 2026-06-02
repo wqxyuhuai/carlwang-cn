@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { workCategories } from "../data";
 import { useContent } from "../contentStore";
-import { CoverArt } from "./CoverArt";
 
 export function Work({ openProject }: { openProject: (id: string) => void }) {
   const { content } = useContent();
@@ -46,7 +45,7 @@ export function Work({ openProject }: { openProject: (id: string) => void }) {
 
       <section className="mx-auto max-w-[1680px] px-8 py-10">
         <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {visible.map((p, i) => (
+          {visible.map((p) => (
             <button
               key={p.id}
               onClick={() => openProject(p.id)}
@@ -59,9 +58,7 @@ export function Work({ openProject }: { openProject: (id: string) => void }) {
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
-                ) : (
-                  <CoverArt index={i} />
-                )}
+                ) : null}
               </div>
               <div className="pt-3">
                 <div className="text-[var(--fg)] text-base font-semibold tracking-tight line-clamp-2 group-hover:underline">

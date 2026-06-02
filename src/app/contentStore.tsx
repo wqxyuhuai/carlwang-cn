@@ -7,9 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import {
-  allWork,
   capabilities,
-  labItems,
   socials,
   type LabItem,
   type Project,
@@ -161,16 +159,8 @@ const defaultLinks: ManagedLink[] = [
 ];
 
 export const defaultContent: SiteContent = {
-  projects: allWork.map((project, index) => ({
-    ...project,
-    slug: project.slug ?? project.id,
-    sortOrder: project.sortOrder ?? index + 1,
-  })),
-  labItems: labItems.map((item) => ({
-    ...item,
-    slug: item.slug ?? item.id,
-    hidden: item.hidden ?? false,
-  })),
+  projects: [],
+  labItems: [],
   socials,
   capabilities,
   links: defaultLinks,
@@ -218,6 +208,18 @@ function publicContent(value: SiteContent): SiteContent {
   };
 }
 
+function mergePublishedContent(current: SiteContent, published: Partial<SiteContent>) {
+  const next = normalizeContent(published);
+  return {
+    ...next,
+    messages: current.messages,
+    settings: {
+      ...next.settings,
+      oss: current.settings.oss,
+    },
+  };
+}
+
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<SiteContent>(() => {
     try {
@@ -229,11 +231,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (content.settings.oss?.accessKeySecret) return;
     fetch(`${PUBLISHED_CONTENT_URL}?t=${Date.now()}`)
       .then((response) => (response.ok ? response.json() : null))
       .then((published) => {
-        if (published) setContent(normalizeContent(published));
+        if (published) {
+          setContent((current) => mergePublishedContent(current, published));
+        }
       })
       .catch(() => {});
   }, []);

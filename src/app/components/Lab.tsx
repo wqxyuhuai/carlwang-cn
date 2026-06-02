@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { labCategories } from "../data";
 import { useContent } from "../contentStore";
-import { CoverArt } from "./CoverArt";
 
 export function Lab({ openLab }: { openLab: (id: string) => void }) {
   const { content } = useContent();
@@ -40,7 +39,7 @@ export function Lab({ openLab }: { openLab: (id: string) => void }) {
       </section>
 
       <section className="mx-auto max-w-[1680px] px-8 py-10 grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        {visible.map((it, index) => (
+        {visible.map((it) => (
           <button
             key={it.id}
             onClick={() => openLab(it.id)}
@@ -53,9 +52,7 @@ export function Lab({ openLab }: { openLab: (id: string) => void }) {
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-              ) : (
-                <CoverArt index={index + 4} />
-              )}
+              ) : null}
             </div>
             <div className="pt-3 text-[var(--fg)] text-base font-semibold tracking-tight line-clamp-2 group-hover:underline">
               {it.title}

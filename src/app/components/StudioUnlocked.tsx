@@ -247,29 +247,6 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
         </div>
       </div>
 
-      <div className="hidden">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
-          Recent Activity
-        </div>
-        <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] divide-y divide-[color:var(--line-soft)]">
-          {[
-            "Published WattDesk Cloud Platform",
-            "Added new lab item: Random Gradient Generator",
-            "Updated site settings - footer text",
-            "Generated QR code for /go/portfolio",
-          ].map((a, i) => (
-            <div
-              key={i}
-              className="px-6 py-4 flex items-center justify-between"
-            >
-              <span className="text-[var(--fg)]">{a}</span>
-              <span className="text-[var(--muted-2)] text-sm">
-                {i + 1}h ago
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -414,10 +391,8 @@ function ProjectForm({
   const [f, setF] = useState({
     id: initial?.id ?? "",
     title: initial?.title ?? "",
-    slug: initial?.slug ?? "",
     category: initial?.category ?? "App / UI",
     year: initial?.year ?? 2026,
-    role: initial?.role ?? "",
     description: initial?.description ?? "",
     content: initial?.content ?? "",
     richContent: initial?.richContent ?? textToRichBlocks(initial?.content),
@@ -429,13 +404,13 @@ function ProjectForm({
     featured: !!initial?.featured,
     sortOrder: initial?.sortOrder ?? 999,
   });
-  const uploadSlug = slugify(f.slug || f.title || initial?.id || "untitled-project");
+  const uploadSlug = slugify(f.title || initial?.id || "untitled-project");
   const uploadBase = `work/${uploadSlug}`;
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const slug = f.slug || slugify(f.title);
+        const slug = initial?.slug || slugify(f.title);
         onSave({
           ...initial,
           id: f.id || slug,
@@ -443,7 +418,7 @@ function ProjectForm({
           title: f.title,
           category: f.category,
           year: f.year,
-          role: f.role,
+          role: initial?.role ?? f.category,
           description: f.description,
           content: f.content,
           richContent: f.richContent,
@@ -478,7 +453,6 @@ function ProjectForm({
             <Field label="Category" value={f.category} onChange={(v) => setF({ ...f, category: v })} />
             <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
           </div>
-          <Field label="Role" value={f.role} onChange={(v) => setF({ ...f, role: v })} />
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Status"
@@ -519,6 +493,8 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
   const { content, saveLabItem, deleteLabItem } = useContent();
   const items = content.labItems;
   const [panel, setPanel] = useState<null | { id?: string }>(null);
+  const toggleFeatured = (item: LabItem) =>
+    saveLabItem({ ...item, featured: !item.featured });
 
   return (
     <div>
@@ -552,11 +528,21 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
                     Hidden
                   </span>
                 )}
+                {it.featured && (
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-amber-400/15 text-amber-500">
+                    Featured
+                  </span>
+                )}
               </div>
               <p className="text-[var(--muted)] text-sm line-clamp-2">
                 {it.description}
               </p>
               <div className="flex gap-1 mt-3">
+                <IconBtn
+                  onClick={() => toggleFeatured(it)}
+                  icon={Star}
+                  label={it.featured ? "Unfeature" : "Feature"}
+                />
                 <IconBtn
                   onClick={() => setPanel({ id: it.id })}
                   icon={Edit3}
@@ -616,7 +602,6 @@ function LabForm({
   const [f, setF] = useState({
     id: initial?.id ?? "",
     title: initial?.title ?? "",
-    slug: initial?.slug ?? "",
     type: initial?.type ?? "Web Tools",
     status: initial?.status ?? "Idea",
     description: initial?.description ?? "",
@@ -626,15 +611,15 @@ function LabForm({
     content: initial?.content ?? "",
     richContent: initial?.richContent ?? textToRichBlocks(initial?.content),
     coverImage: initial?.coverImage ?? "",
-    published: !initial?.hidden,
+    featured: !!initial?.featured,
   });
-  const uploadSlug = slugify(f.slug || f.title || initial?.id || "untitled-lab");
+  const uploadSlug = slugify(f.title || initial?.id || "untitled-lab");
   const uploadBase = `lab/${uploadSlug}`;
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const slug = f.slug || slugify(f.title);
+        const slug = initial?.slug || slugify(f.title);
         onSave({
           ...initial,
           id: f.id || slug,
@@ -649,7 +634,8 @@ function LabForm({
           content: f.content,
           richContent: f.richContent,
           coverImage: f.coverImage,
-          hidden: !f.published,
+          featured: f.featured,
+          hidden: initial?.hidden ?? false,
         });
       }}
       className="space-y-0"
@@ -687,7 +673,7 @@ function LabForm({
           <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
           <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
           <Field label="Tech Stack" value={f.techStack} onChange={(v) => setF({ ...f, techStack: v })} />
-          <Toggle label="Published" checked={f.published} onChange={(v) => setF({ ...f, published: v })} />
+          <Toggle label="Featured" checked={f.featured} onChange={(v) => setF({ ...f, featured: v })} />
         </aside>
       </div>
       <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-[color:var(--line)]">
@@ -712,15 +698,12 @@ function LabForm({
 /* ---------------- TOOLBOX ---------------- */
 
 function ToolboxTab({ toast }: { toast: (m: string) => void }) {
-  const [files, setFiles] = useState([
-    { id: "f1", name: "wattdesk-deck.pdf", type: "PDF", isPublic: false },
-    { id: "f2", name: "brand-guideline-v2.pdf", type: "PDF", isPublic: true },
-    { id: "f3", name: "motion-source-01.aep", type: "AEP", isPublic: false },
-  ]);
-  const [notes, setNotes] = useState([
-    { id: "n1", text: "Try a horizontal scroll feature row on Home", pinned: true },
-    { id: "n2", text: "Refactor cover gradients into a single token map", pinned: false },
-  ]);
+  const [files, setFiles] = useState<
+    { id: string; name: string; type: string; isPublic: boolean }[]
+  >([]);
+  const [notes, setNotes] = useState<
+    { id: string; text: string; pinned: boolean }[]
+  >([]);
   const [draft, setDraft] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -880,20 +863,6 @@ function ToolboxTab({ toast }: { toast: (m: string) => void }) {
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-
-      {/* Utility placeholder */}
-      <div>
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2">
-          Tool 03
-        </div>
-        <div className="text-[var(--fg)] text-2xl tracking-tight mb-5">
-          Utility (coming soon)
-        </div>
-        <div className="rounded-2xl border border-dashed border-[color:var(--line-strong)] p-10 text-center text-[var(--muted-2)]">
-          More tools coming soon. This is a placeholder for future private
-          utilities.
         </div>
       </div>
 
