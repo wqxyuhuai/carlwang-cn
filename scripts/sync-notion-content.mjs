@@ -8,6 +8,11 @@ const NOTION_VERSION = "2022-06-28";
 const DEFAULT_CONTENT_URL =
   "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json";
 const FETCH_TIMEOUT_MS = Number(process.env.SYNC_FETCH_TIMEOUT_MS || 90000);
+const FETCH_RETRIES = Number(process.env.SYNC_FETCH_RETRIES || 3);
+const NOTION_CONCURRENCY = Number(process.env.SYNC_NOTION_CONCURRENCY || 3);
+const BLOCK_CONCURRENCY = Number(process.env.SYNC_BLOCK_CONCURRENCY || 4);
+const MEDIA_CONCURRENCY = Number(process.env.SYNC_MEDIA_CONCURRENCY || 2);
+const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
 const PLACEHOLDER_PROJECT_IDS = new Set([
   "wattdesk",
   "imaster",
@@ -46,6 +51,65 @@ function required(name) {
   return value;
 }
 
+function envFlag(name) {
+  return ["1", "true", "yes", "on"].includes(
+    String(process.env[name] || "").trim().toLowerCase(),
+  );
+}
+
+function envList(name) {
+  return String(process.env[name] || "")
+    .split(/[,\s]+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelayMs(attempt, response) {
+  const retryAfter = response?.headers?.get("retry-after");
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  }
+  return Math.min(30000, 750 * 2 ** attempt);
+}
+
+function createLimiter(max) {
+  const limit = Math.max(1, Number(max) || 1);
+  let active = 0;
+  const queue = [];
+
+  const next = () => {
+    if (active >= limit || queue.length === 0) return;
+    const { task, resolve, reject } = queue.shift();
+    active += 1;
+    Promise.resolve()
+      .then(task)
+      .then(resolve, reject)
+      .finally(() => {
+        active -= 1;
+        next();
+      });
+  };
+
+  return (task) =>
+    new Promise((resolve, reject) => {
+      queue.push({ task, resolve, reject });
+      next();
+    });
+}
+
+async function mapWithConcurrency(items, concurrency, mapper) {
+  const limit = createLimiter(concurrency);
+  return Promise.all(items.map((item, index) => limit(() => mapper(item, index))));
+}
+
+const limitNotion = createLimiter(NOTION_CONCURRENCY);
+const limitMedia = createLimiter(MEDIA_CONCURRENCY);
+
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -57,6 +121,38 @@ async function fetchWithTimeout(url, options = {}) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchWithRetry(url, options = {}) {
+  const retries = Number.isFinite(options.retries) ? options.retries : FETCH_RETRIES;
+  let lastError;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetchWithTimeout(url, options);
+      if (
+        response.ok ||
+        !RETRYABLE_STATUS_CODES.has(response.status) ||
+        attempt === retries
+      ) {
+        return response;
+      }
+      await response.text().catch(() => "");
+      const delay = retryDelayMs(attempt, response);
+      console.log(
+        `Retrying ${url} after HTTP ${response.status} in ${Math.round(delay / 1000)}s`,
+      );
+      await sleep(delay);
+    } catch (error) {
+      lastError = error;
+      if (attempt === retries) throw error;
+      const delay = retryDelayMs(attempt);
+      console.log(`Retrying ${url} after ${error.message} in ${Math.round(delay / 1000)}s`);
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
 }
 
 function cleanPart(value) {
