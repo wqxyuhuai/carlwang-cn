@@ -45,8 +45,8 @@
 }
 
 .project-detail-shell {
-  width: calc(100vw - var(--content-pad) * 2);
-  max-width: 1680px;
+  width: min(var(--content-max), calc(100vw - var(--content-pad) * 2));
+  max-width: var(--content-max);
 }
 
 .project-detail-shell .project-content > * {
