@@ -813,6 +813,16 @@ async function main() {
     }
     processedPages.push({ id: page.id, title });
     console.log(`Built: ${title} (${Math.round((Date.now() - pageStartedAt) / 1000)}s)`);
+
+    if (!dryRun) {
+      const uploadedUrl = await uploadJson(content);
+      console.log(`Uploaded site content after ${title}: ${uploadedUrl}`);
+
+      if (!skipMark) {
+        await markSynced(page.id);
+        console.log(`Marked synced: ${title}`);
+      }
+    }
   }
 
   if (!pages.length && !removedPlaceholders && !migratedContent) {
@@ -825,15 +835,12 @@ async function main() {
     return;
   }
 
-  const uploadedUrl = await uploadJson(content);
-  console.log(`Uploaded site content: ${uploadedUrl}`);
+  if (!processedPages.length) {
+    const uploadedUrl = await uploadJson(content);
+    console.log(`Uploaded site content: ${uploadedUrl}`);
+  }
 
-  if (!skipMark) {
-    for (const page of processedPages) {
-      await markSynced(page.id);
-      console.log(`Marked synced: ${page.title}`);
-    }
-  } else {
+  if (skipMark && processedPages.length) {
     console.log("SYNC_SKIP_MARK is enabled; skipped Notion status updates.");
   }
 
