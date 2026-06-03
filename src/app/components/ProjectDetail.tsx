@@ -60,8 +60,8 @@ export function ProjectDetail({
         )}
       </section>
 
-      <section className="content-shell py-12 max-md:py-6">
-        <ProjectContentRenderer blocks={blocks} />
+      <section className="content-shell project-detail-shell py-12 max-md:py-6">
+        <ProjectContentRenderer blocks={blocks} fullWidth />
       </section>
 
       <section className="content-shell py-12 flex items-center justify-between gap-4 max-md:grid max-md:grid-cols-2 max-md:py-8">

@@ -54,8 +54,8 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="content-shell py-12 max-md:py-6">
-        <NotionContentView blocks={blocks} />
+      <section className="content-shell project-detail-shell py-12 max-md:py-6">
+        <NotionContentView blocks={blocks} fullWidth />
       </section>
 
       <section className="content-shell py-16 max-md:py-8">

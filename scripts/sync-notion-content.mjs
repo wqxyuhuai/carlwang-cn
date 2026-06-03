@@ -202,6 +202,45 @@ function extFromContentType(contentType) {
   return map[type] || "";
 }
 
+function ossUrlForObjectKey(objectKey) {
+  const bucket = required("ALIYUN_OSS_BUCKET");
+  const endpoint = required("ALIYUN_OSS_ENDPOINT")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
+  return `https://${bucket}.${endpoint}/${encodePath(objectKey)}`;
+}
+
+function publicUrlForObjectKey(objectKey) {
+  const publicBase = (process.env.ALIYUN_OSS_PUBLIC_BASE_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+  const url = ossUrlForObjectKey(objectKey);
+  return publicBase ? `${publicBase}/${encodePath(objectKey)}` : url;
+}
+
+function ossRequestHeaders(method, contentType, objectKey) {
+  const bucket = required("ALIYUN_OSS_BUCKET");
+  const accessKeyId = required("ALIYUN_OSS_ACCESS_KEY_ID");
+  const accessKeySecret = required("ALIYUN_OSS_ACCESS_KEY_SECRET");
+  const date = new Date().toUTCString();
+  const resource = `/${bucket}/${objectKey}`;
+  const ossHeaders =
+    method === "PUT"
+      ? `x-oss-date:${date}\nx-oss-object-acl:public-read\n`
+      : `x-oss-date:${date}\n`;
+  const stringToSign = `${method}\n\n${contentType || ""}\n${date}\n${ossHeaders}${resource}`;
+  const signature = crypto
+    .createHmac("sha1", accessKeySecret)
+    .update(stringToSign)
+    .digest("base64");
+  return {
+    Authorization: `OSS ${accessKeyId}:${signature}`,
+    ...(contentType ? { "Content-Type": contentType } : {}),
+    ...(method === "PUT" ? { "x-oss-object-acl": "public-read" } : {}),
+    "x-oss-date": date,
+  };
+}
+
 function firstText(richText = []) {
   return richText.map((entry) => entry.plain_text || "").join("");
 }
@@ -380,63 +419,101 @@ async function download(url) {
   return { buffer, contentType };
 }
 
+function safeMediaSuffix(suffix) {
+  return String(suffix || "media")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function mediaObjectKey(prefix, label, suffix, ext) {
+  return [
+    cleanPart(process.env.ALIYUN_OSS_DIR || "uploads"),
+    cleanPart(prefix),
+    `${label}-${safeMediaSuffix(suffix) || "media"}${ext || ""}`,
+  ]
+    .filter(Boolean)
+    .join("/");
+}
+
+function mediaExtCandidates(url, fallbackExt = "") {
+  const fromUrl = extensionFromUrl(url);
+  const candidates = [
+    fromUrl,
+    fallbackExt,
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
+    ".mp4",
+    ".webm",
+  ].filter(Boolean);
+  return [...new Set(candidates)];
+}
+
+async function ossObjectExists(objectKey) {
+  const response = await fetchWithRetry(ossUrlForObjectKey(objectKey), {
+    method: "HEAD",
+    headers: ossRequestHeaders("HEAD", "", objectKey),
+    retries: 1,
+  });
+  if (response.ok) return true;
+  if (response.status === 403 || response.status === 404) return false;
+  const body = await response.text().catch(() => "");
+  throw new Error(`OSS HEAD failed ${response.status}: ${body}`);
+}
+
+async function findExistingMediaObject(prefix, label, suffix, extCandidates) {
+  for (const ext of extCandidates) {
+    const objectKey = mediaObjectKey(prefix, label, suffix, ext);
+    if (await ossObjectExists(objectKey)) return objectKey;
+  }
+  return "";
+}
+
 async function uploadBuffer(buffer, contentType, objectKey) {
-  const bucket = required("ALIYUN_OSS_BUCKET");
-  const endpoint = required("ALIYUN_OSS_ENDPOINT")
-    .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "");
-  const accessKeyId = required("ALIYUN_OSS_ACCESS_KEY_ID");
-  const accessKeySecret = required("ALIYUN_OSS_ACCESS_KEY_SECRET");
-  const date = new Date().toUTCString();
-  const resource = `/${bucket}/${objectKey}`;
-  const ossHeaders = `x-oss-date:${date}\nx-oss-object-acl:public-read\n`;
-  const stringToSign = `PUT\n\n${contentType}\n${date}\n${ossHeaders}${resource}`;
-  const signature = crypto
-    .createHmac("sha1", accessKeySecret)
-    .update(stringToSign)
-    .digest("base64");
-  const url = `https://${bucket}.${endpoint}/${encodePath(objectKey)}`;
+  const url = ossUrlForObjectKey(objectKey);
   const response = await fetchWithRetry(url, {
     method: "PUT",
-    headers: {
-      Authorization: `OSS ${accessKeyId}:${signature}`,
-      "Content-Type": contentType,
-      "x-oss-date": date,
-      "x-oss-object-acl": "public-read",
-    },
+    headers: ossRequestHeaders("PUT", contentType, objectKey),
     body: buffer,
   });
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     throw new Error(`OSS upload failed ${response.status}: ${body}`);
   }
-  const publicBase = (process.env.ALIYUN_OSS_PUBLIC_BASE_URL || "")
-    .trim()
-    .replace(/\/+$/, "");
-  return publicBase ? `${publicBase}/${encodePath(objectKey)}` : url;
+  return publicUrlForObjectKey(objectKey);
 }
 
 async function uploadRemoteMediaNow(url, prefix, label, suffix) {
   if (!url) {
     throw new Error(`Missing media URL for ${prefix}/${label}-${suffix}`);
   }
+  const existingObjectKey = await findExistingMediaObject(
+    prefix,
+    label,
+    suffix,
+    mediaExtCandidates(url),
+  );
+  if (existingObjectKey) {
+    console.log(`  Reusing ${label} ${suffix}: ${existingObjectKey}`);
+    return publicUrlForObjectKey(existingObjectKey);
+  }
+
   console.log(`  Downloading ${label} ${suffix}: ${url.slice(0, 96)}`);
   const { buffer, contentType } = await download(url);
   const fallbackExt = extFromContentType(contentType);
   const ext = extensionFromUrl(url, fallbackExt) || fallbackExt;
   const safeExt = ext && ext.length <= 12 ? ext : fallbackExt;
-  const safeSuffix = String(suffix || "media")
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-  const objectKey = [
-    cleanPart(process.env.ALIYUN_OSS_DIR || "uploads"),
-    cleanPart(prefix),
-    `${label}-${safeSuffix || "media"}${safeExt}`,
-  ]
-    .filter(Boolean)
-    .join("/");
+  const objectKey = mediaObjectKey(prefix, label, suffix, safeExt);
+
+  if (await ossObjectExists(objectKey)) {
+    console.log(`  Reusing ${label} ${suffix}: ${objectKey}`);
+    return publicUrlForObjectKey(objectKey);
+  }
+
   console.log(`  Uploading ${label} ${suffix}: ${objectKey}`);
   const uploaded = await uploadBuffer(buffer, contentType, objectKey);
   console.log(`  Uploaded ${label} ${suffix}`);

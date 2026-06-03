@@ -15,17 +15,37 @@ export function textToProjectBlocks(value: string): ProjectBlock[] {
     }));
 }
 
-export function ProjectContentRenderer({ blocks }: { blocks: ProjectBlock[] }) {
-  return <div className="project-content">{renderBlocks(blocks)}</div>;
+export function ProjectContentRenderer({
+  blocks,
+  fullWidth = false,
+}: {
+  blocks: ProjectBlock[];
+  fullWidth?: boolean;
+}) {
+  return (
+    <div className={fullWidth ? "project-content project-content--full" : "project-content"}>
+      {renderBlocks(blocks, fullWidth)}
+    </div>
+  );
 }
 
-function renderBlocks(blocks: ProjectBlock[] = []) {
+function renderBlocks(blocks: ProjectBlock[] = [], fullWidth = false) {
   return blocks.map((block, index) => (
-    <ProjectBlockView key={block.id || `${block.type}-${index}`} block={block} />
+    <ProjectBlockView
+      key={block.id || `${block.type}-${index}`}
+      block={block}
+      fullWidth={fullWidth}
+    />
   ));
 }
 
-function ProjectBlockView({ block }: { block: ProjectBlock }) {
+function ProjectBlockView({
+  block,
+  fullWidth,
+}: {
+  block: ProjectBlock;
+  fullWidth: boolean;
+}) {
   const text = block.text ?? block.value ?? "";
 
   if (block.type === "columns" || block.type === "column_list") {
@@ -35,13 +55,13 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
     const count = Math.min(Math.max(columns.length || 2, 2), 3);
     return (
       <div
-        className={`${blockWidth(block)} ${blockAlign(block)} my-6 grid gap-4 md:gap-5 ${
+        className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-6 grid gap-4 md:gap-5 ${
           count === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
         }`}
       >
         {columns.slice(0, 3).map((items, index) => (
           <div key={`${block.id}-column-${index}`} className="min-w-0 space-y-3">
-            {renderBlocks(items)}
+            {renderBlocks(items, fullWidth)}
           </div>
         ))}
       </div>
@@ -51,27 +71,27 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
   if (block.type === "gallery-grid") {
     const items = block.children || [];
     return (
-      <div className={`${blockWidth(block)} ${blockAlign(block)} my-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3`}>
+      <div className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3`}>
         {items.map((item) => (
-          <ProjectBlockView key={item.id} block={{ ...item, width: "full" }} />
+          <ProjectBlockView key={item.id} block={{ ...item, width: "full" }} fullWidth={fullWidth} />
         ))}
       </div>
     );
   }
 
   if (block.type === "divider") {
-    return <hr className={`${blockWidth(block)} ${blockAlign(block)} my-10 border-[color:var(--line)]`} />;
+    return <hr className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-10 border-[color:var(--line)]`} />;
   }
 
   if (block.type === "image") {
     if (!block.value) return null;
     return (
-      <figure className={`${blockWidth(block)} ${blockAlign(block)} my-5`}>
+      <figure className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5`}>
         <img
           src={block.value}
           alt={block.caption || ""}
           draggable={false}
-          className="aspect-auto w-full rounded-lg border border-[color:var(--line)] object-cover protected-media"
+          className="aspect-auto w-full rounded-lg border border-[color:var(--line)] object-contain protected-media"
         />
         {block.caption && (
           <figcaption className="mt-3 text-center text-sm text-[var(--muted-2)]">
@@ -85,14 +105,14 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
   if (block.type === "video") {
     if (!block.value) return null;
     return (
-      <figure className={`${blockWidth(block)} ${blockAlign(block)} my-5`}>
+      <figure className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5`}>
         <video
           src={block.value}
           controls
           controlsList="nodownload noplaybackrate noremoteplayback"
           disablePictureInPicture
           draggable={false}
-          className="aspect-video w-full rounded-lg border border-[color:var(--line)] object-cover protected-media"
+          className="aspect-video w-full rounded-lg border border-[color:var(--line)] object-contain protected-media"
         />
         {block.caption && (
           <figcaption className="mt-3 text-center text-sm text-[var(--muted-2)]">
@@ -111,7 +131,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
         href={href}
         target="_blank"
         rel="noreferrer"
-        className={`${blockWidth(block)} ${blockAlign(block)} my-5 flex items-center justify-between gap-4 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4 text-[var(--fg)] transition-colors hover:border-[color:var(--accent)]/50`}
+        className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5 flex items-center justify-between gap-4 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4 text-[var(--fg)] transition-colors hover:border-[color:var(--accent)]/50`}
       >
         <span className="min-w-0 truncate">{text || href}</span>
         <ExternalLink className="h-4 w-4 shrink-0 text-[var(--muted-2)]" />
@@ -121,7 +141,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
 
   if (block.type === "table") {
     return (
-      <div className={`${blockWidth(block)} ${blockAlign(block)} my-8 overflow-x-auto rounded-xl border border-[color:var(--line)]`}>
+      <div className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-8 overflow-x-auto rounded-xl border border-[color:var(--line)]`}>
         <table className="w-full border-collapse text-left text-sm">
           <tbody>
             {(block.rows || []).map((row, rowIndex) => (
@@ -141,7 +161,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
 
   if (block.type === "code") {
     return (
-      <pre className={`${blockWidth(block)} ${blockAlign(block)} my-6 overflow-x-auto rounded-xl border border-[color:var(--line)] bg-[#111] px-5 py-4 text-sm leading-7 text-white`}>
+      <pre className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-6 overflow-x-auto rounded-xl border border-[color:var(--line)] bg-[#111] px-5 py-4 text-sm leading-7 text-white`}>
         {block.language && (
           <div className="mb-3 text-xs uppercase tracking-[0.16em] text-white/45">
             {block.language}
@@ -161,7 +181,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
           : [];
     const Tag = block.ordered || block.type === "numbered_list_item" ? "ol" : "ul";
     return (
-      <Tag className={`${blockWidth(block)} ${blockAlign(block)} my-4 list-inside space-y-2 text-base leading-7 text-[var(--fg)] ${Tag === "ol" ? "list-decimal" : "list-disc"}`}>
+      <Tag className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-4 list-inside space-y-2 text-base leading-7 text-[var(--fg)] ${Tag === "ol" ? "list-decimal" : "list-disc"}`}>
         {items.map((item, index) => (
           <li key={index}>{item}</li>
         ))}
@@ -171,7 +191,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
 
   if (block.type === "quote") {
     return (
-      <blockquote className={`${blockWidth(block)} ${blockAlign(block)} my-6 border-l-2 border-[color:var(--fg)] pl-5 text-xl leading-8 text-[var(--fg)]`}>
+      <blockquote className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-6 border-l-2 border-[color:var(--fg)] pl-5 text-xl leading-8 text-[var(--fg)]`}>
         {text}
       </blockquote>
     );
@@ -179,7 +199,7 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
 
   if (block.type === "callout") {
     return (
-      <div className={`${blockWidth(block)} ${blockAlign(block)} my-5 flex gap-3 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4`}>
+      <div className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5 flex gap-3 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4`}>
         <span className="mt-0.5 text-lg">{block.icon || "i"}</span>
         <p className="min-w-0 whitespace-pre-wrap text-base leading-7 text-[var(--fg)]">{text}</p>
       </div>
@@ -188,14 +208,14 @@ function ProjectBlockView({ block }: { block: ProjectBlock }) {
 
   if (block.type === "fallback") {
     return (
-      <div className={`${blockWidth(block)} ${blockAlign(block)} my-4 rounded-xl border border-dashed border-[color:var(--line)] px-4 py-3 text-sm text-[var(--muted)]`}>
+      <div className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-4 rounded-xl border border-dashed border-[color:var(--line)] px-4 py-3 text-sm text-[var(--muted)]`}>
         Unsupported block: {text || "This content type is not available yet."}
       </div>
     );
   }
 
   const tag = headingLevel(block);
-  const className = `${blockWidth(block)} ${blockAlign(block)} whitespace-pre-wrap ${textClass(block)}`;
+  const className = `${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} whitespace-pre-wrap ${textClass(block)}`;
   const style = textStyle(block);
   if (tag === "h2") return <h2 className={className} style={style}>{text}</h2>;
   if (tag === "h3") return <h3 className={className} style={style}>{text}</h3>;
@@ -213,13 +233,15 @@ function headingLevel(block: ProjectBlock): "h2" | "h3" | "h4" | "p" {
   return "p";
 }
 
-function blockAlign(block: ProjectBlock) {
+function blockAlign(block: ProjectBlock, fullWidth = false) {
+  if (fullWidth) return "text-left";
   if (block.align === "center") return "mx-auto text-center";
   if (block.align === "right") return "ml-auto text-right";
   return "text-left";
 }
 
-function blockWidth(block: ProjectBlock) {
+function blockWidth(block: ProjectBlock, fullWidth = false) {
+  if (fullWidth) return "w-full max-w-full";
   if (block.width === "half") return "max-w-[520px] max-md:max-w-full";
   if (block.width === "full") return "w-full";
   return "max-w-[860px] max-md:max-w-full";

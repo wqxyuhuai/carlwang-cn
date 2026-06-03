@@ -8,6 +8,12 @@ export function textToRichBlocks(value: string): RichBlock[] {
   return textToProjectBlocks(value);
 }
 
-export function NotionContentView({ blocks }: { blocks: RichBlock[] }) {
-  return <ProjectContentRenderer blocks={blocks} />;
+export function NotionContentView({
+  blocks,
+  fullWidth = false,
+}: {
+  blocks: RichBlock[];
+  fullWidth?: boolean;
+}) {
+  return <ProjectContentRenderer blocks={blocks} fullWidth={fullWidth} />;
 }

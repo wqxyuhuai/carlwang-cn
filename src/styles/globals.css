@@ -44,6 +44,10 @@
   margin-right: auto;
 }
 
+.project-detail-shell {
+  width: min(1360px, calc(100vw - var(--content-pad) * 2));
+}
+
 @media (max-width: 720px) {
   :root,
   .theme-dark,
