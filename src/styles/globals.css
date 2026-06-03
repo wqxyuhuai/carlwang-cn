@@ -49,6 +49,19 @@
   max-width: 1680px;
 }
 
+.project-detail-shell .project-content > * {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.project-detail-shell .project-content figure img,
+.project-detail-shell .project-content figure video {
+  width: 100%;
+  max-width: 100%;
+}
+
 @media (max-width: 720px) {
   :root,
   .theme-dark,
