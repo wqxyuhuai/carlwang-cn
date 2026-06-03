@@ -48,7 +48,15 @@
   :root,
   .theme-dark,
   .theme-light {
-    --content-pad: 20px;
+    --content-pad: 16px;
+  }
+
+  body {
+    background-attachment: scroll;
+  }
+
+  .cursor-glow {
+    display: none;
   }
 }
 

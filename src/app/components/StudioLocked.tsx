@@ -24,9 +24,9 @@ export function StudioLocked({
   const [error, setError] = useState("");
 
   return (
-    <div className="content-shell min-h-[calc(100vh-64px)] grid place-items-center py-24 relative overflow-hidden">
+    <div className="content-shell min-h-[calc(100vh-64px)] grid place-items-center py-24 relative overflow-hidden max-md:py-10">
       <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-2)] backdrop-blur p-10">
+        <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-2)] backdrop-blur p-10 max-md:p-6">
           <div className="w-12 h-12 rounded-full bg-[color:var(--hover)] border border-[color:var(--line)] grid place-items-center mb-6">
             <Lock className="w-5 h-5 text-[var(--accent)]" />
           </div>
@@ -35,7 +35,7 @@ export function StudioLocked({
           </div>
           <h2
             className="display text-[var(--fg)]"
-            style={{ fontSize: 44, lineHeight: 1.02 }}
+            style={{ fontSize: "clamp(34px, 10vw, 44px)", lineHeight: 1.02 }}
           >
             Studio <span className="text-[var(--muted)]">Locked</span>
           </h2>
@@ -81,7 +81,7 @@ export function StudioLocked({
               />
             </div>
             {error && <div className="text-rose-500 text-sm">{error}</div>}
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-2 max-md:flex-col">
               <button
                 type="submit"
                 className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-[var(--app-bg)] hover:bg-[var(--accent)]"

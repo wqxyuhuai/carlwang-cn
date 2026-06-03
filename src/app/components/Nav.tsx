@@ -22,20 +22,20 @@ export function Nav({
   ];
 
   return (
-    <header className="sticky top-0 z-40">
-      <div className="absolute left-0 right-0 top-0 h-[76px] pointer-events-none frosted-bar border-b border-[color:var(--line-soft)]" />
-      <div className="content-shell relative grid h-[76px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
+    <header className="sticky top-0 z-40 max-md:mb-[48px]">
+      <div className="absolute left-0 right-0 top-0 h-[76px] pointer-events-none frosted-bar border-b border-[color:var(--line-soft)] max-md:h-[64px]" />
+      <div className="content-shell relative grid h-[76px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center max-md:h-[64px] max-md:grid-cols-[1fr_auto] max-md:gap-2">
         <button
           onClick={() => go("home")}
-          className="group flex items-center gap-2.5 justify-self-start"
+          className="group flex min-w-0 items-center gap-2.5 justify-self-start"
         >
-          <span className="tracking-tight text-[var(--fg)]">Carl Wang</span>
+          <span className="truncate tracking-tight text-[var(--fg)]">Carl Wang</span>
           <span className="text-[var(--muted-2)] text-sm hidden sm:inline">
             - studio
           </span>
         </button>
 
-        <nav className="flex items-center gap-1 justify-self-center">
+        <nav className="flex items-center gap-1 justify-self-center max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[64px] max-md:z-40 max-md:justify-start max-md:overflow-x-auto max-md:border-b max-md:border-[color:var(--line-soft)] max-md:bg-[var(--glass-strong)] max-md:px-4 max-md:py-2 max-md:backdrop-blur-xl">
           {items.map((it) => {
             const active =
               route === it.route ||
@@ -45,7 +45,7 @@ export function Nav({
               <button
                 key={it.route}
                 onClick={() => go(it.route)}
-                className={`h-9 w-[78px] rounded-full text-center text-sm transition-colors ${
+                className={`h-9 w-[78px] shrink-0 rounded-full text-center text-sm transition-colors max-md:w-auto max-md:px-4 ${
                   active
                     ? "bg-[var(--fg)] text-[var(--app-bg)]"
                     : "text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[color:var(--hover)]"
@@ -59,7 +59,7 @@ export function Nav({
             onClick={() =>
               go(studioUnlocked ? "studio-unlocked" : "studio-locked")
             }
-            className={`flex h-9 w-[94px] items-center justify-center gap-1.5 rounded-full text-sm transition-colors ${
+            className={`flex h-9 w-[94px] shrink-0 items-center justify-center gap-1.5 rounded-full text-sm transition-colors max-md:w-auto max-md:px-4 ${
               route.startsWith("studio")
                 ? "bg-[var(--fg)] text-[var(--app-bg)]"
                 : "text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[color:var(--hover)]"
@@ -70,7 +70,7 @@ export function Nav({
           </button>
         </nav>
 
-        <div className="flex items-center gap-1.5 justify-self-end">
+        <div className="flex items-center gap-1.5 justify-self-end max-md:col-start-2">
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
@@ -84,7 +84,7 @@ export function Nav({
           </button>
           <button
             onClick={() => go("about")}
-            className="h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-sm hover:opacity-90 transition-all flex items-center gap-1.5"
+            className="h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-sm hover:opacity-90 transition-all flex items-center gap-1.5 max-md:hidden"
           >
             Contact <ArrowUpRight className="w-3.5 h-3.5" />
           </button>

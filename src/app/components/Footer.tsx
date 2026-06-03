@@ -15,13 +15,13 @@ export function Footer() {
   const { socials, settings } = content;
 
   return (
-    <footer className="border-t border-[color:var(--line-soft)] mt-24">
-      <div className="content-shell py-14 grid grid-cols-12 gap-8">
+    <footer className="border-t border-[color:var(--line-soft)] mt-24 max-md:mt-12">
+      <div className="content-shell py-14 grid grid-cols-12 gap-8 max-md:py-10 max-md:gap-10">
         <div className="col-span-12 md:col-span-5">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
             Based in Wuxi
           </div>
-          <div className="display text-[var(--fg)] text-4xl leading-tight">
+          <div className="display text-[var(--fg)] text-4xl leading-tight max-md:text-3xl">
             {settings.name}
             <br />
             <span className="text-[var(--muted-2)]">Personal Hub</span>
@@ -59,7 +59,7 @@ export function Footer() {
           </p>
         </div>
       </div>
-      <div className="content-shell py-6 flex items-center justify-between border-t border-[color:var(--line-soft)] text-[var(--muted-2)] text-xs">
+      <div className="content-shell py-6 flex items-center justify-between gap-3 border-t border-[color:var(--line-soft)] text-[var(--muted-2)] text-xs max-md:flex-col max-md:items-start">
         <span>{settings.name} Studio - Wuxi / Remote</span>
         <span>configurable prototype</span>
       </div>
