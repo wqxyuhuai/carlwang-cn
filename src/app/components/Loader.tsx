@@ -34,13 +34,13 @@ export function Loader({ onDone }: { onDone: () => void }) {
         leaving ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      <div className="relative h-[140px] min-w-[360px] flex items-center justify-center">
+      <div className="relative flex h-[140px] w-full max-w-[360px] items-center justify-center px-6">
         {greetings.map((g, idx) => (
           <span
             key={g.lang}
             className="display absolute text-[var(--fg)] whitespace-nowrap"
             style={{
-              fontSize: 96,
+              fontSize: "clamp(56px, 18vw, 96px)",
               lineHeight: 1,
               opacity: idx === i ? 1 : 0,
               filter: idx === i ? "blur(0)" : "blur(18px)",

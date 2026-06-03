@@ -65,14 +65,14 @@ export function StudioUnlocked({
   ];
 
   return (
-    <div className="content-shell py-12 relative">
-      <div className="flex items-end justify-between mb-10">
+    <div className="content-shell py-12 relative max-md:py-8">
+      <div className="flex items-end justify-between gap-6 mb-10 max-md:flex-col max-md:items-start max-md:mb-7">
         <div>
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-3">
             Studio - Owner Mode
           </div>
           <h1
-            className="display text-[var(--fg)]" style={{ fontSize: 80, lineHeight: 0.96 }}
+            className="display text-[var(--fg)]" style={{ fontSize: "clamp(44px, 10vw, 80px)", lineHeight: 0.96 }}
           >
             Carl <span className="text-[var(--muted)]">Studio</span>
           </h1>
@@ -81,7 +81,7 @@ export function StudioUnlocked({
             codes, and basic site information.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-md:w-full max-md:flex-wrap">
           <button
             onClick={async () => {
               setPublishing(true);
@@ -95,7 +95,7 @@ export function StudioUnlocked({
               }
             }}
             disabled={publishing}
-            className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] hover:bg-[var(--accent)] disabled:opacity-50 flex items-center gap-2"
+            className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] hover:bg-[var(--accent)] disabled:opacity-50 flex items-center gap-2 max-md:flex-1 max-md:justify-center"
           >
             <UploadCloud className="w-4 h-4" /> {publishing ? "Publishing" : "Publish"}
           </button>
@@ -104,7 +104,7 @@ export function StudioUnlocked({
               onLock();
               go("home");
             }}
-            className="h-10 px-4 rounded-full border border-[color:var(--line-strong)] text-[var(--fg-2)] hover:bg-[color:var(--hover)] flex items-center gap-2"
+            className="h-10 px-4 rounded-full border border-[color:var(--line-strong)] text-[var(--fg-2)] hover:bg-[color:var(--hover)] flex items-center gap-2 max-md:flex-1 max-md:justify-center"
           >
             <Lock className="w-4 h-4" /> Lock Studio
           </button>
@@ -112,7 +112,7 @@ export function StudioUnlocked({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-y border-[color:var(--line)] py-2 mb-10 overflow-x-auto sticky top-16 frosted-bar z-20">
+      <div className="flex items-center gap-1 border-y border-[color:var(--line)] py-2 mb-10 overflow-x-auto sticky top-16 frosted-bar z-20 max-md:top-[112px] max-md:mb-7">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -171,18 +171,18 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
   ];
   return (
     <div className="space-y-10">
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-3 max-md:grid-cols-2">
         {stats.map((s) => (
           <div
             key={s.k}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6"
+            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 max-md:p-4"
           >
             <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
               {s.k}
             </div>
             <div
               className="text-[var(--fg)] tracking-tight mt-3"
-              style={{ fontSize: 56, fontWeight: 500 }}
+              style={{ fontSize: "clamp(34px, 9vw, 56px)", fontWeight: 500 }}
             >
               {s.v}
             </div>
@@ -272,17 +272,17 @@ function ProjectsTab({ toast }: { toast: (m: string) => void }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-4 mb-6 max-md:flex-col max-md:items-stretch">
         <div className="text-[var(--fg-2)]">{list.length} projects</div>
         <button
           onClick={() => setPanel({})}
-          className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] flex items-center gap-2 hover:bg-[var(--accent)]"
+          className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] flex items-center justify-center gap-2 hover:bg-[var(--accent)]"
         >
           <Plus className="w-4 h-4" /> Add Project
         </button>
       </div>
-      <div className="rounded-2xl border border-[color:var(--line)] overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-2xl border border-[color:var(--line)] overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
             <tr>
               <th className="text-left px-4 py-3">Title</th>
@@ -442,11 +442,11 @@ function ProjectForm({
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
           <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
             <Field label="Category" value={f.category} onChange={(v) => setF({ ...f, category: v })} />
             <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
             <Select
               label="Status"
               value={f.status}
@@ -461,7 +461,7 @@ function ProjectForm({
           </div>
         </aside>
       </div>
-      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur">
+      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur max-md:-mx-4 max-md:px-4">
         <button
           type="button"
           onClick={onCancel}
@@ -500,11 +500,11 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
           <Plus className="w-4 h-4" /> Add Lab Item
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
         {items.map((it) => (
           <div
             key={it.id}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 flex gap-4"
+            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 flex gap-4 max-md:p-4"
           >
             <div className="w-24 h-24 rounded-lg bg-[color:var(--surface-2)] flex-shrink-0 overflow-hidden">
               {it.coverImage && (
@@ -653,7 +653,7 @@ function LabForm({
             <img src={f.coverImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover border border-[color:var(--line)]" />
           )}
           <Field label="Title" value={f.title} onChange={(v) => setF({ ...f, title: v })} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
             <Select
               label="Type"
               value={f.type}
@@ -672,7 +672,7 @@ function LabForm({
           <Toggle label="Featured" checked={f.featured} onChange={(v) => setF({ ...f, featured: v })} />
         </aside>
       </div>
-      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur">
+      <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur max-md:-mx-4 max-md:px-4">
         <button
           type="button"
           onClick={onCancel}
@@ -1096,7 +1096,7 @@ function QRTab({ toast }: { toast: (m: string) => void }) {
   const presets = content.links.filter((link) => link.enabled).map((link) => link.slug);
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
         <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
           Source
@@ -1209,7 +1209,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
         saveSettings(s);
         toast("Site settings saved");
       }}
-      className="grid grid-cols-2 gap-6"
+      className="grid grid-cols-2 gap-6 max-lg:grid-cols-1"
     >
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
         <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
@@ -1231,10 +1231,10 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
         <Field label="Behance URL" value={s.behance} onChange={(v) => setS({ ...s, behance: v })} />
         <Field label="LinkedIn URL" value={s.linkedin} onChange={(v) => setS({ ...s, linkedin: v })} />
       </div>
-      <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6">
+      <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 max-lg:col-span-1 max-md:p-4">
         <Field label="Footer text" value={s.footer} onChange={(v) => setS({ ...s, footer: v })} />
       </div>
-      <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
+      <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4 max-lg:col-span-1 max-md:p-4">
         <div className="flex items-center justify-between">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
             Aliyun OSS Storage
@@ -1245,7 +1245,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
             onChange={(enabled) => setSettings({ ...s, oss: { ...oss, enabled } })}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
           <Field label="Bucket" value={oss.bucket} onChange={(v) => setS({ ...s, oss: { ...oss, bucket: v } })} placeholder="your-bucket-name" />
           <Field label="Endpoint" value={oss.endpoint} onChange={(v) => setS({ ...s, oss: { ...oss, endpoint: v } })} placeholder="oss-cn-shanghai.aliyuncs.com" />
           <Field label="Base directory" value={oss.directory} onChange={(v) => setS({ ...s, oss: { ...oss, directory: v } })} placeholder="uploads" />
@@ -2275,14 +2275,14 @@ function SidePanel({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[color:var(--app-bg)]/88 backdrop-blur-3xl px-4"
+      className="fixed inset-0 z-50 grid place-items-center bg-[color:var(--app-bg)]/88 backdrop-blur-3xl px-4 max-md:px-0"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[1320px] max-h-[88vh] bg-[var(--app-bg)] border border-[color:var(--line)] rounded-3xl overflow-y-auto shadow-2xl"
+        className="w-full max-w-[1320px] max-h-[88vh] bg-[var(--app-bg)] border border-[color:var(--line)] rounded-3xl overflow-y-auto shadow-2xl max-md:h-dvh max-md:max-h-dvh max-md:rounded-none max-md:border-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-5 border-b border-[color:var(--line)] flex items-center justify-between sticky top-0 bg-[color:var(--app-bg)]/95 backdrop-blur">
+        <div className="px-6 py-5 border-b border-[color:var(--line)] flex items-center justify-between sticky top-0 bg-[color:var(--app-bg)]/95 backdrop-blur max-md:px-4 max-md:py-4">
           <div className="text-[var(--fg)] text-xl tracking-tight">{title}</div>
           <button
             onClick={onClose}
@@ -2291,7 +2291,7 @@ function SidePanel({
             x
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 max-md:p-4">{children}</div>
       </div>
     </div>
   );

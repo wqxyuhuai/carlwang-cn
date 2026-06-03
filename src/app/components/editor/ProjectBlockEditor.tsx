@@ -255,11 +255,11 @@ export function ProjectBlockEditor({
         });
       }}
     >
-      <div className="mb-5 flex items-center justify-between">
-        <div>
+      <div className="mb-6 grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-2 max-md:grid-cols-[28px_minmax(0,1fr)_auto]">
+        <div className="col-start-2 min-w-0">
           <div className="text-sm font-medium text-[var(--fg)]">Project content</div>
         </div>
-        <div className="rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] p-1">
+        <div className="col-start-3 rounded-full border border-[color:var(--line)] bg-[var(--app-bg)] p-1">
           {(["edit", "preview"] as const).map((item) => (
             <button
               key={item}
@@ -280,7 +280,7 @@ export function ProjectBlockEditor({
           <ProjectContentRenderer blocks={value} />
         </div>
       ) : (
-        <div className="relative px-2 py-4">
+        <div className="relative px-2 py-4 max-md:px-0">
           {selectionToolbar && (
             <FloatingToolbar
               top={selectionToolbar.top}
@@ -311,15 +311,15 @@ export function ProjectBlockEditor({
               }}
               onDragLeave={() => setDragOverIndex(null)}
               onDrop={(event) => handleDrop(event, index)}
-              className={`group relative -mx-12 grid grid-cols-[40px_minmax(0,1fr)_32px] gap-2 rounded-lg px-2 py-0.5 transition-colors ${
+              className={`group relative -mx-12 grid grid-cols-[40px_minmax(0,1fr)_32px] gap-2 rounded-lg px-2 py-0.5 transition-colors max-md:mx-0 max-md:grid-cols-[28px_minmax(0,1fr)_28px] max-md:gap-1 max-md:px-0 ${
                 dragOverIndex === index ? "bg-[color:var(--accent-soft)]" : "hover:bg-black/[0.015]"
               }`}
             >
-              <div className="relative flex justify-end gap-1 pt-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+              <div className="relative flex justify-end gap-1 pt-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100 max-md:opacity-60">
                 <button
                   type="button"
                   onClick={() => setMenuIndex(menuIndex === index ? null : index)}
-                  className="grid h-7 w-7 place-items-center rounded-md text-[var(--muted-2)] hover:bg-[color:var(--surface-2)] hover:text-[var(--fg)]"
+                  className="grid h-7 w-7 place-items-center rounded-md text-[var(--muted-2)] hover:bg-[color:var(--surface-2)] hover:text-[var(--fg)] max-md:h-6 max-md:w-6"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -329,7 +329,7 @@ export function ProjectBlockEditor({
                     event.dataTransfer.setData("text/plain", String(index));
                     event.dataTransfer.effectAllowed = "move";
                   }}
-                  className="grid h-7 w-5 cursor-grab place-items-center text-[var(--muted-2)]"
+                  className="grid h-7 w-5 cursor-grab place-items-center text-[var(--muted-2)] max-md:hidden"
                 >
                   <GripVertical className="h-4 w-4" />
                 </div>
@@ -354,7 +354,7 @@ export function ProjectBlockEditor({
               <button
                 type="button"
                 onClick={() => remove(block.id)}
-                className="mt-1 grid h-7 w-7 place-items-center rounded-md text-[var(--muted-2)] opacity-0 transition-opacity hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100"
+                className="mt-1 grid h-7 w-7 place-items-center rounded-md text-[var(--muted-2)] opacity-0 transition-opacity hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100 max-md:h-6 max-md:w-6"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -363,7 +363,7 @@ export function ProjectBlockEditor({
           <button
             type="button"
             onClick={appendParagraph}
-            className="ml-[42px] mt-3 block min-h-28 w-[calc(100%-42px)] rounded-lg px-2 text-left text-sm text-transparent transition-colors hover:bg-black/[0.015] hover:text-[var(--muted-3)] focus:text-[var(--muted-3)] focus:outline-none"
+            className="ml-[42px] mt-3 block min-h-28 w-[calc(100%-42px)] rounded-lg px-2 text-left text-sm text-transparent transition-colors hover:bg-black/[0.015] hover:text-[var(--muted-3)] focus:text-[var(--muted-3)] focus:outline-none max-md:ml-[29px] max-md:w-[calc(100%-29px)]"
           >
             Click to continue writing
           </button>
@@ -777,7 +777,7 @@ function SlashCommandMenu({
   onPick: (type: ProjectBlock["type"]) => void;
 }) {
   return (
-    <div className="absolute left-0 top-full z-40 mt-1 w-[300px] overflow-hidden rounded-xl border border-[color:var(--line)] bg-[var(--surface)] py-1 shadow-xl backdrop-blur">
+    <div className="absolute left-0 top-full z-40 mt-1 w-[300px] max-w-[calc(100vw-32px)] overflow-hidden rounded-xl border border-[color:var(--line)] bg-[var(--surface)] py-1 shadow-xl backdrop-blur">
       {items.length ? (
         items.map((command) => (
           <button
@@ -805,7 +805,7 @@ function SlashCommandMenu({
 
 function InsertMenu({ onPick }: { onPick: (type: ProjectBlock["type"]) => void }) {
   return (
-    <div className="absolute left-8 top-8 z-30 w-[280px] overflow-hidden rounded-xl border border-[color:var(--line)] bg-[var(--surface)] py-1 shadow-xl backdrop-blur">
+    <div className="absolute left-8 top-8 z-30 w-[280px] max-w-[calc(100vw-32px)] overflow-hidden rounded-xl border border-[color:var(--line)] bg-[var(--surface)] py-1 shadow-xl backdrop-blur max-md:left-0">
       {commands.map((command) => (
         <button
           key={command.type}
@@ -937,9 +937,9 @@ function editorTextClass(block: ProjectBlock) {
 }
 
 function editorBlockWidth(block: ProjectBlock) {
-  if (block.width === "half") return "max-w-[520px]";
+  if (block.width === "half") return "max-w-[520px] max-md:max-w-full";
   if (block.width === "full") return "w-full";
-  return "max-w-[860px]";
+  return "max-w-[860px] max-md:max-w-full";
 }
 
 function editorTextStyle(block: ProjectBlock): CSSProperties {

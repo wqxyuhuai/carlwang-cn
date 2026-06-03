@@ -51,17 +51,17 @@ export function About() {
 
   return (
     <div>
-      <section className="content-shell pt-24 pb-12">
+      <section className="content-shell pt-24 pb-12 max-md:pt-12 max-md:pb-8">
         <h1
           className="display max-w-4xl text-[var(--fg)]"
-          style={{ fontSize: "clamp(64px, 8vw, 132px)", lineHeight: 0.94 }}
+          style={{ fontSize: "clamp(46px, 14vw, 132px)", lineHeight: 0.94 }}
         >
           About <span className="text-[var(--muted)]">Carl</span>
         </h1>
       </section>
 
       <section className="content-shell grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-5">
+        <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-5 max-md:p-6">
           <div className="mb-6 h-24 w-24 rounded-full bg-gradient-to-br from-[var(--accent)] via-[color:var(--accent-soft)] to-[color:var(--surface-2)]" />
           <div className="text-3xl tracking-tight text-[var(--fg)]">
             {settings.name}
@@ -79,7 +79,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="content-shell py-20">
+      <section className="content-shell py-20 max-md:py-12">
         <div className="mb-8 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
           Other Places
         </div>
@@ -107,7 +107,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="content-shell py-16">
+      <section className="content-shell py-16 max-md:py-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <div className="mb-6 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
@@ -115,12 +115,12 @@ export function About() {
             </div>
             <h2
               className="display text-[var(--fg)]"
-              style={{ fontSize: 52, lineHeight: 1.02 }}
+              style={{ fontSize: "clamp(34px, 10vw, 52px)", lineHeight: 1.02 }}
             >
               Get in touch
             </h2>
           </div>
-          <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-7">
+          <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-7 max-md:p-5">
             {sent ? (
               <div className="py-16 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-[var(--accent)]" />
@@ -184,7 +184,7 @@ export function About() {
                 <div className="flex justify-end sm:col-span-2">
                   <button
                     type="submit"
-                    className="flex h-12 items-center gap-2 rounded-full bg-[var(--accent)] px-6 text-[var(--app-bg)] hover:bg-[var(--accent)]"
+                    className="flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 text-[var(--app-bg)] hover:bg-[var(--accent)] max-md:w-full"
                   >
                     <Send className="h-4 w-4" /> Send Message
                   </button>
@@ -208,7 +208,7 @@ function TagPanel({
   strong?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8">
+    <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 max-md:p-6">
       <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
         {title}
       </div>

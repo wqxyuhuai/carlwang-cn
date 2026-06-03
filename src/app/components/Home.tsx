@@ -41,28 +41,28 @@ export function Home({
   return (
     <div>
       <section className="relative overflow-hidden">
-        <div className="content-shell pt-24 pb-24 relative">
-          <div className="reveal reveal-1 text-[var(--muted)] text-sm mb-12">
+        <div className="content-shell pt-24 pb-24 relative max-md:pt-12 max-md:pb-14">
+          <div className="reveal reveal-1 text-[var(--muted)] text-sm mb-12 max-md:mb-8">
             Available for select projects
           </div>
           <h1
-            className="display reveal reveal-2 text-[var(--fg)] max-w-4xl"
-            style={{ fontSize: 64, lineHeight: 1.08 }}
+            className="display reveal reveal-2 text-[var(--fg)] max-w-4xl max-md:text-[42px]"
+            style={{ fontSize: "clamp(42px, 10vw, 64px)", lineHeight: 1.08 }}
           >
             {settings.slogan}
             <br />
             {settings.role}
           </h1>
-          <div className="reveal reveal-3 mt-16 flex gap-3">
+          <div className="reveal reveal-3 mt-16 flex gap-3 max-md:mt-10 max-md:flex-col">
             <button
               onClick={() => go("work")}
-              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center gap-2 hover:bg-[color:var(--hover)] hover:border-[color:var(--accent)]/40 transition-all"
+              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center justify-center gap-2 hover:bg-[color:var(--hover)] hover:border-[color:var(--accent)]/40 transition-all"
             >
               View Work <ArrowUpRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => go("lab")}
-              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center gap-2 hover:bg-[color:var(--hover)] hover:border-[color:var(--accent)]/40 transition-all"
+              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center justify-center gap-2 hover:bg-[color:var(--hover)] hover:border-[color:var(--accent)]/40 transition-all"
             >
               <Compass className="w-4 h-4" /> Explore Lab
             </button>
@@ -70,13 +70,13 @@ export function Home({
         </div>
       </section>
 
-      <section className="content-shell py-20 relative">
+      <section className="content-shell py-20 relative max-md:py-12">
         <SectionHeader
           title="Work"
           link="See all"
           onLink={() => go("work")}
         />
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 max-md:mt-6">
           {featuredWork.map((p, i) => (
             <button
               key={p.id}
@@ -111,13 +111,13 @@ export function Home({
         </div>
       </section>
 
-      <section className="content-shell py-20 relative">
+      <section className="content-shell py-20 relative max-md:py-12">
         <SectionHeader
           title="Lab"
           link="Enter Lab"
           onLink={() => go("lab")}
         />
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 max-md:mt-6">
           {featuredLabItems.map((it, i) => (
             <button
               key={it.id}
@@ -149,19 +149,19 @@ export function Home({
         </div>
       </section>
 
-      <section className="content-shell py-20 relative">
+      <section className="content-shell py-20 relative max-md:py-12">
         <SectionHeader
           title="About"
           link="More info"
           onLink={() => go("about")}
         />
-        <div className="grid grid-cols-12 gap-8 mt-12">
-          <div className="col-span-7 reveal-up">
+        <div className="grid grid-cols-12 gap-8 mt-12 max-md:mt-6 max-md:grid-cols-1">
+          <div className="col-span-7 reveal-up max-md:col-span-1">
             <p className="text-[var(--fg-2)] text-lg leading-relaxed mb-8">
               I work between product logic and visual expression. I like building
               things that are useful, clear and a little bit delightful.
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
               {socials.slice(0, 4).map((s) => {
                 const Icon = iconMap[s.icon as string];
                 return (
@@ -177,7 +177,7 @@ export function Home({
               })}
             </div>
           </div>
-          <div className="col-span-5 reveal-up">
+          <div className="col-span-5 reveal-up max-md:col-span-1">
             <div className="rounded-2xl border border-[color:var(--line)] p-8 bg-[color:var(--surface)] h-full">
               <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-6">
                 Focus
@@ -221,11 +221,11 @@ function SectionHeader({
   onLink?: () => void;
 }) {
   return (
-    <div className="reveal-up flex items-end justify-between pb-6 border-b border-[color:var(--line)]">
+    <div className="reveal-up flex items-end justify-between gap-4 pb-6 border-b border-[color:var(--line)]">
       <div className="flex items-baseline gap-6">
         <h3
           className="display text-[var(--fg)]"
-          style={{ fontSize: 38, lineHeight: 1 }}
+          style={{ fontSize: "clamp(30px, 8vw, 38px)", lineHeight: 1 }}
         >
           {title}
         </h3>

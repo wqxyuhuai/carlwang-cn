@@ -19,7 +19,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
 
   return (
     <div>
-      <section className="content-shell pt-10">
+      <section className="content-shell pt-10 max-md:pt-6">
         <button
           onClick={() => go("lab")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
@@ -28,15 +28,15 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </button>
       </section>
 
-      <section className="content-shell pt-14 pb-12 text-center">
-        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight">
+      <section className="content-shell pt-14 pb-12 text-center max-md:pt-9 max-md:pb-7">
+        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight max-md:text-3xl">
           {item.title}
         </h1>
-        <div className="flex justify-center gap-3 mt-7">
+        <div className="flex justify-center gap-3 mt-7 max-md:flex-col">
           {item.demo && (
             <a
               href={item.demo}
-              className="h-12 px-6 rounded-full bg-[var(--fg)] text-[var(--app-bg)] flex items-center gap-2 hover:opacity-90"
+              className="h-12 px-6 rounded-full bg-[var(--fg)] text-[var(--app-bg)] flex items-center justify-center gap-2 hover:opacity-90"
             >
               <ExternalLink className="w-4 h-4" /> Open Demo
             </a>
@@ -46,7 +46,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
               href={item.github}
               target="_blank"
               rel="noreferrer"
-              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center gap-2 hover:bg-[color:var(--hover)]"
+              className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center justify-center gap-2 hover:bg-[color:var(--hover)]"
             >
               <Github className="w-4 h-4" /> View GitHub
             </a>
@@ -54,14 +54,14 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         </div>
       </section>
 
-      <section className="content-shell py-12">
+      <section className="content-shell py-12 max-md:py-6">
         <NotionContentView blocks={blocks} />
       </section>
 
-      <section className="content-shell py-16">
+      <section className="content-shell py-16 max-md:py-8">
         <button
           onClick={() => go("lab")}
-          className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)]"
+          className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)] max-md:w-full"
         >
           Back to Lab
         </button>

@@ -220,17 +220,17 @@ function blockAlign(block: ProjectBlock) {
 }
 
 function blockWidth(block: ProjectBlock) {
-  if (block.width === "half") return "max-w-[520px]";
+  if (block.width === "half") return "max-w-[520px] max-md:max-w-full";
   if (block.width === "full") return "w-full";
-  return "max-w-[860px]";
+  return "max-w-[860px] max-md:max-w-full";
 }
 
 function textClass(block: ProjectBlock) {
   const tag = headingLevel(block);
-  if (tag === "h2") return "my-10 text-4xl font-semibold leading-tight tracking-tight text-[var(--fg)]";
-  if (tag === "h3") return "my-8 text-3xl font-semibold leading-tight tracking-tight text-[var(--fg)]";
-  if (tag === "h4") return "my-7 text-2xl font-semibold leading-snug text-[var(--fg)]";
-  return "my-4 text-base leading-8 text-[var(--fg)]";
+  if (tag === "h2") return "my-10 text-4xl font-semibold leading-tight tracking-tight text-[var(--fg)] max-md:my-7 max-md:text-3xl";
+  if (tag === "h3") return "my-8 text-3xl font-semibold leading-tight tracking-tight text-[var(--fg)] max-md:my-6 max-md:text-2xl";
+  if (tag === "h4") return "my-7 text-2xl font-semibold leading-snug text-[var(--fg)] max-md:my-5 max-md:text-xl";
+  return "my-4 text-base leading-8 text-[var(--fg)] max-md:leading-7";
 }
 
 function textStyle(block: ProjectBlock): CSSProperties {

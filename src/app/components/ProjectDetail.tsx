@@ -35,7 +35,7 @@ export function ProjectDetail({
 
   return (
     <div>
-      <section className="content-shell pt-10">
+      <section className="content-shell pt-10 max-md:pt-6">
         <button
           onClick={() => go("work")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
@@ -44,8 +44,8 @@ export function ProjectDetail({
         </button>
       </section>
 
-      <section className="content-shell pt-14 pb-12 text-center">
-        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight">
+      <section className="content-shell pt-14 pb-12 text-center max-md:pt-9 max-md:pb-7">
+        <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight max-md:text-3xl">
           {project.title}
         </h1>
         {project.externalUrl && (
@@ -60,33 +60,33 @@ export function ProjectDetail({
         )}
       </section>
 
-      <section className="content-shell py-12">
+      <section className="content-shell py-12 max-md:py-6">
         <ProjectContentRenderer blocks={blocks} />
       </section>
 
-      <section className="content-shell py-12 flex items-center justify-between">
+      <section className="content-shell py-12 flex items-center justify-between gap-4 max-md:grid max-md:grid-cols-2 max-md:py-8">
         {allWork.length > 1 ? (
-        <button onClick={() => openProject(prev.id)} className="group text-left">
+        <button onClick={() => openProject(prev.id)} className="group min-w-0 text-left">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1 flex items-center gap-2">
             <ArrowLeft className="w-3.5 h-3.5" /> Previous
           </div>
-          <div className="text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors">
+          <div className="line-clamp-2 text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors max-md:text-base">
             {prev.title}
           </div>
         </button>
         ) : <span />}
         <button
           onClick={() => go("work")}
-          className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)]"
+          className="h-11 px-5 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] hover:bg-[color:var(--hover)] max-md:col-span-2 max-md:row-start-2"
         >
           Back to Work
         </button>
         {allWork.length > 1 ? (
-        <button onClick={() => openProject(next.id)} className="group text-right">
+        <button onClick={() => openProject(next.id)} className="group min-w-0 text-right">
           <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1 flex items-center justify-end gap-2">
             Next <ArrowRight className="w-3.5 h-3.5" />
           </div>
-          <div className="text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors">
+          <div className="line-clamp-2 text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors max-md:text-base">
             {next.title}
           </div>
         </button>
