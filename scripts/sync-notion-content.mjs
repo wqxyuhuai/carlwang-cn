@@ -124,12 +124,13 @@ async function fetchWithTimeout(url, options = {}) {
 }
 
 async function fetchWithRetry(url, options = {}) {
-  const retries = Number.isFinite(options.retries) ? options.retries : FETCH_RETRIES;
+  const { retries: requestedRetries, ...fetchOptions } = options;
+  const retries = Number.isFinite(requestedRetries) ? requestedRetries : FETCH_RETRIES;
   let lastError;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
-      const response = await fetchWithTimeout(url, options);
+      const response = await fetchWithTimeout(url, fetchOptions);
       if (
         response.ok ||
         !RETRYABLE_STATUS_CODES.has(response.status) ||
@@ -250,15 +251,17 @@ function normalizeCategory(value) {
 }
 
 async function notion(pathname, options = {}) {
-  const response = await fetchWithTimeout(`https://api.notion.com/v1${pathname}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${required("NOTION_TOKEN")}`,
-      "Notion-Version": NOTION_VERSION,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
+  const response = await limitNotion(() =>
+    fetchWithRetry(`https://api.notion.com/v1${pathname}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${required("NOTION_TOKEN")}`,
+        "Notion-Version": NOTION_VERSION,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    }),
+  );
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     throw new Error(`Notion API failed ${response.status}: ${body}`);
@@ -266,18 +269,22 @@ async function notion(pathname, options = {}) {
   return response.json();
 }
 
-async function querySyncPages(databaseId) {
+async function querySyncPages(databaseId, options = {}) {
   const pages = [];
   let startCursor;
   do {
     const body = {
       page_size: 100,
-      filter: {
-        or: [
-          { property: "同步状态", status: { equals: "待同步" } },
-          { property: "同步状态", status: { equals: "待更新" } },
-        ],
-      },
+      ...(options.all
+        ? {}
+        : {
+            filter: {
+              or: [
+                { property: "同步状态", status: { equals: "待同步" } },
+                { property: "同步状态", status: { equals: "待更新" } },
+              ],
+            },
+          }),
     };
     if (startCursor) body.start_cursor = startCursor;
     const data = await notion(`/databases/${databaseId}/query`, {
@@ -288,6 +295,12 @@ async function querySyncPages(databaseId) {
     startCursor = data.has_more ? data.next_cursor : undefined;
   } while (startCursor);
   return pages;
+}
+
+async function getPagesByIds(pageIds) {
+  return mapWithConcurrency(pageIds, NOTION_CONCURRENCY, (pageId) =>
+    notion(`/pages/${pageId}`),
+  );
 }
 
 async function listBlocks(blockId) {
@@ -356,7 +369,7 @@ function calloutIcon(block) {
 }
 
 async function download(url) {
-  const response = await fetchWithTimeout(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     throw new Error(`Download failed ${response.status}: ${body}`);
@@ -383,7 +396,7 @@ async function uploadBuffer(buffer, contentType, objectKey) {
     .update(stringToSign)
     .digest("base64");
   const url = `https://${bucket}.${endpoint}/${encodePath(objectKey)}`;
-  const response = await fetchWithTimeout(url, {
+  const response = await fetchWithRetry(url, {
     method: "PUT",
     headers: {
       Authorization: `OSS ${accessKeyId}:${signature}`,
@@ -403,26 +416,35 @@ async function uploadBuffer(buffer, contentType, objectKey) {
   return publicBase ? `${publicBase}/${encodePath(objectKey)}` : url;
 }
 
-async function uploadRemoteMedia(url, prefix, label, index) {
+async function uploadRemoteMediaNow(url, prefix, label, suffix) {
   if (!url) {
-    throw new Error(`Missing media URL for ${prefix}/${label}-${index}`);
+    throw new Error(`Missing media URL for ${prefix}/${label}-${suffix}`);
   }
-  console.log(`  Downloading ${label} ${index + 1}: ${url.slice(0, 96)}`);
+  console.log(`  Downloading ${label} ${suffix}: ${url.slice(0, 96)}`);
   const { buffer, contentType } = await download(url);
   const fallbackExt = extFromContentType(contentType);
   const ext = extensionFromUrl(url, fallbackExt) || fallbackExt;
   const safeExt = ext && ext.length <= 12 ? ext : fallbackExt;
+  const safeSuffix = String(suffix || "media")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
   const objectKey = [
     cleanPart(process.env.ALIYUN_OSS_DIR || "uploads"),
     cleanPart(prefix),
-    `${label}-${String(index).padStart(2, "0")}${safeExt}`,
+    `${label}-${safeSuffix || "media"}${safeExt}`,
   ]
     .filter(Boolean)
     .join("/");
-  console.log(`  Uploading ${label} ${index + 1}: ${objectKey}`);
+  console.log(`  Uploading ${label} ${suffix}: ${objectKey}`);
   const uploaded = await uploadBuffer(buffer, contentType, objectKey);
-  console.log(`  Uploaded ${label} ${index + 1}`);
+  console.log(`  Uploaded ${label} ${suffix}`);
   return uploaded;
+}
+
+async function uploadRemoteMedia(url, prefix, label, suffix) {
+  return limitMedia(() => uploadRemoteMediaNow(url, prefix, label, suffix));
 }
 
 async function uploadJson(content) {
@@ -438,7 +460,7 @@ async function uploadJson(content) {
 
 async function fetchPublishedContent() {
   const url = process.env.VITE_CONTENT_URL || DEFAULT_CONTENT_URL;
-  const response = await fetchWithTimeout(`${url}?t=${Date.now()}`);
+  const response = await fetchWithRetry(`${url}?t=${Date.now()}`);
   if (!response.ok) {
     throw new Error(`Could not fetch published content ${response.status}`);
   }
@@ -509,23 +531,18 @@ async function buildEntry(page) {
   const categories = propMulti(page.properties, "Category").map(normalizeCategory);
   const blocks = await listBlocks(page.id);
 
-  const mediaState = { index: 1 };
   const galleryImages = [];
   const videos = [];
-  const richContent = (
-    await Promise.all(
-      blocks.map((block) =>
-        notionBlockToRichBlock(block, prefix, mediaState, galleryImages, videos),
-      ),
-    )
-  ).filter(Boolean);
+  const richContent = await blocksToRichBlocks(blocks, prefix);
+  galleryImages.splice(0, galleryImages.length, ...collectBlockValues(richContent, "image"));
+  videos.splice(0, videos.length, ...collectBlockValues(richContent, "video"));
   const textParts = collectText(richContent);
 
   const coverFile = propFiles(page.properties, "Cover")[0];
   let coverImage = galleryImages[0] || "";
   const coverUrl = fileUrl(coverFile);
   if (coverUrl) {
-    coverImage = await uploadRemoteMedia(coverUrl, prefix, "cover", 0);
+    coverImage = await uploadRemoteMedia(coverUrl, prefix, "cover", "00");
   }
 
   if (type === "Lab") {
@@ -575,7 +592,15 @@ async function buildEntry(page) {
   };
 }
 
-async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, videos) {
+async function blocksToRichBlocks(blocks, prefix) {
+  return (
+    await mapWithConcurrency(blocks, BLOCK_CONCURRENCY, (block) =>
+      notionBlockToRichBlock(block, prefix),
+    )
+  ).filter(Boolean);
+}
+
+async function notionBlockToRichBlock(block, prefix) {
   const id = block.id.replace(/-/g, "").slice(0, 24);
 
   if (block.type === "unsupported" || block.archived || block.in_trash) {
@@ -588,13 +613,7 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
 
   if (block.type === "column_list") {
     const columns = block.has_children
-      ? (
-          await Promise.all(
-            (await listBlocks(block.id)).map((child) =>
-              notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
-            ),
-          )
-        ).filter(Boolean)
+      ? await blocksToRichBlocks(await listBlocks(block.id), prefix)
       : [];
     return {
       id,
@@ -607,13 +626,7 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
 
   if (block.type === "column") {
     const children = block.has_children
-      ? (
-          await Promise.all(
-            (await listBlocks(block.id)).map((child) =>
-              notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
-            ),
-          )
-        ).filter(Boolean)
+      ? await blocksToRichBlocks(await listBlocks(block.id), prefix)
       : [];
     return {
       id,
@@ -628,10 +641,8 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
       mediaUrl(block),
       prefix,
       block.type,
-      mediaState.index++,
+      id,
     );
-    if (block.type === "image") galleryImages.push(uploaded);
-    if (block.type === "video") videos.push(uploaded);
     return {
       id,
       type: block.type,
@@ -693,13 +704,7 @@ async function notionBlockToRichBlock(block, prefix, mediaState, galleryImages, 
   }
 
   const children = block.has_children
-    ? (
-        await Promise.all(
-          (await listBlocks(block.id)).map((child) =>
-            notionBlockToRichBlock(child, prefix, mediaState, galleryImages, videos),
-          ),
-        )
-      ).filter(Boolean)
+    ? await blocksToRichBlocks(await listBlocks(block.id), prefix)
     : undefined;
 
   return {
@@ -730,6 +735,24 @@ function collectText(blocks) {
         output.push(item.value);
       }
       if (item.children?.length) walk(item.children);
+      if (item.columns?.length) {
+        for (const column of item.columns) walk(column);
+      }
+    }
+  };
+  walk(blocks);
+  return output;
+}
+
+function collectBlockValues(blocks, type) {
+  const output = [];
+  const walk = (items) => {
+    for (const item of items || []) {
+      if (item.type === type && item.value) output.push(item.value);
+      if (item.children?.length) walk(item.children);
+      if (item.columns?.length) {
+        for (const column of item.columns) walk(column);
+      }
     }
   };
   walk(blocks);
@@ -753,16 +776,33 @@ async function markSynced(pageId) {
 
 async function main() {
   loadEnv(ENV_PATH);
-  const pages = await querySyncPages(required("NOTION_DATABASE_ID"));
-  console.log(`Found ${pages.length} page(s) to sync.`);
+  const startedAt = Date.now();
+  const pageIds = envList("SYNC_PAGE_IDS");
+  const pageLimit = Number(process.env.SYNC_PAGE_LIMIT || 0);
+  const dryRun = envFlag("SYNC_DRY_RUN");
+  const skipMark = envFlag("SYNC_SKIP_MARK");
+  const syncAll = envFlag("SYNC_ALL");
+  const queriedPages = pageIds.length
+    ? await getPagesByIds(pageIds)
+    : await querySyncPages(required("NOTION_DATABASE_ID"), { all: syncAll });
+  const pages = pageLimit > 0 ? queriedPages.slice(0, pageLimit) : queriedPages;
+
+  console.log(
+    `Found ${queriedPages.length} page(s); syncing ${pages.length}${
+      dryRun ? " in dry-run mode" : ""
+    }.`,
+  );
+  if (syncAll) console.log("SYNC_ALL is enabled; status filter is disabled.");
 
   const content = await fetchPublishedContent();
   content.projects = Array.isArray(content.projects) ? content.projects : [];
   content.labItems = Array.isArray(content.labItems) ? content.labItems : [];
   const removedPlaceholders = removePlaceholderContent(content);
   const migratedContent = migratePublishedContent(content);
+  const processedPages = [];
 
   for (const page of pages) {
+    const pageStartedAt = Date.now();
     const title = propTitle(page.properties);
     console.log(`Syncing: ${title}`);
     const entry = await buildEntry(page);
@@ -771,8 +811,8 @@ async function main() {
     } else {
       content.labItems = upsertById(content.labItems, entry.item);
     }
-    await markSynced(page.id);
-    console.log(`Marked synced: ${title}`);
+    processedPages.push({ id: page.id, title });
+    console.log(`Built: ${title} (${Math.round((Date.now() - pageStartedAt) / 1000)}s)`);
   }
 
   if (!pages.length && !removedPlaceholders && !migratedContent) {
@@ -780,11 +820,27 @@ async function main() {
     return;
   }
 
+  if (dryRun) {
+    console.log("Dry run complete; skipped site content upload and Notion status updates.");
+    return;
+  }
+
   const uploadedUrl = await uploadJson(content);
   console.log(`Uploaded site content: ${uploadedUrl}`);
+
+  if (!skipMark) {
+    for (const page of processedPages) {
+      await markSynced(page.id);
+      console.log(`Marked synced: ${page.title}`);
+    }
+  } else {
+    console.log("SYNC_SKIP_MARK is enabled; skipped Notion status updates.");
+  }
+
+  console.log(`Done in ${Math.round((Date.now() - startedAt) / 1000)}s.`);
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  console.error(error.stack || error.message);
   process.exitCode = 1;
 });
