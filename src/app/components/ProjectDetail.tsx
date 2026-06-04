@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
+import { sortByDisplayOrder } from "../contentOrdering";
 import {
   ProjectContentRenderer,
   textToProjectBlocks,
@@ -16,9 +17,9 @@ export function ProjectDetail({
   openProject: (id: string) => void;
 }) {
   const { content } = useContent();
-  const allWork = content.projects
-    .filter((project) => project.status === "Published")
-    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+  const allWork = sortByDisplayOrder(
+    content.projects.filter((project) => project.status === "Published"),
+  );
   const idx = Math.max(0, allWork.findIndex((p) => p.id === id));
   const project = allWork[idx] ?? allWork[0];
 

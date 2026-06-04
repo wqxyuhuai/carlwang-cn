@@ -35,7 +35,7 @@ export function Nav({
           </span>
         </button>
 
-        <nav className="flex items-center gap-1 justify-self-center max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[64px] max-md:z-40 max-md:justify-start max-md:overflow-x-auto max-md:border-b max-md:border-[color:var(--line-soft)] max-md:bg-[var(--glass-strong)] max-md:px-4 max-md:py-2 max-md:backdrop-blur-xl">
+        <nav className="flex w-[422px] items-center justify-center gap-1 justify-self-center max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[64px] max-md:z-40 max-md:w-auto max-md:justify-start max-md:overflow-x-auto max-md:border-b max-md:border-[color:var(--line-soft)] max-md:bg-[var(--glass-strong)] max-md:px-4 max-md:py-2 max-md:backdrop-blur-xl">
           {items.map((it) => {
             const active =
               route === it.route ||

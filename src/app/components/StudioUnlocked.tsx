@@ -25,6 +25,7 @@ import {
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
 import type { LabItem, Project, RichBlock } from "../data";
+import { reorderIds, sortByDisplayOrder } from "../contentOrdering";
 import { canUploadToOss, uploadToOss } from "../ossUpload";
 import { ProjectBlockEditor } from "./editor/ProjectBlockEditor";
 
@@ -112,7 +113,8 @@ export function StudioUnlocked({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-y border-[color:var(--line)] py-2 mb-10 overflow-x-auto sticky top-16 frosted-bar z-20 max-md:top-[112px] max-md:mb-7">
+      <div className="sticky top-16 z-20 mb-10 overflow-x-auto rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] p-1 shadow-sm max-md:top-[112px] max-md:mb-7">
+        <div className="flex min-w-max items-center gap-1">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -126,6 +128,7 @@ export function StudioUnlocked({
             {t.label}
           </button>
         ))}
+        </div>
       </div>
 
       {tab === "overview" && <Overview setTab={setTab} />}
@@ -153,14 +156,16 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
     {
       k: "Published Projects",
       v: content.projects.filter((item) => item.status === "Published").length,
+      to: "projects" as Tab,
     },
-    { k: "Lab Items", v: content.labItems.filter((item) => !item.hidden).length },
-    { k: "Active Links", v: content.links.filter((item) => item.enabled).length },
+    { k: "Lab Items", v: content.labItems.filter((item) => !item.hidden).length, to: "lab" as Tab },
+    { k: "Active Links", v: content.links.filter((item) => item.enabled).length, to: "links" as Tab },
     {
       k: "Draft Items",
       v: content.projects.filter((item) => item.status === "Draft").length,
+      to: "projects" as Tab,
     },
-    { k: "Messages", v: content.messages.length },
+    { k: "Messages", v: content.messages.length, to: "overview" as Tab },
   ];
   const actions = [
     { label: "Add Project", to: "projects", icon: Plus },
@@ -173,9 +178,10 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
     <div className="space-y-10">
       <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-3 max-md:grid-cols-2">
         {stats.map((s) => (
-          <div
+          <button
             key={s.k}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 max-md:p-4"
+            onClick={() => setTab(s.to)}
+            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 text-left transition-colors hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--hover)] max-md:p-4"
           >
             <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
               {s.k}
@@ -186,7 +192,7 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
             >
               {s.v}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -251,16 +257,14 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
 /* ---------------- PROJECTS ---------------- */
 
 function ProjectsTab({ toast }: { toast: (m: string) => void }) {
-  const { content, saveProject, deleteProject } = useContent();
-  const list = content.projects
-    .slice()
-    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
-    .map((p) => ({
+  const { content, saveProject, deleteProject, reorderProjects } = useContent();
+  const list = sortByDisplayOrder(content.projects).map((p) => ({
       ...p,
       featured: !!p.featured,
       hidden: p.status === "Hidden",
     }));
   const [panel, setPanel] = useState<null | { id?: string }>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const toggleHidden = (project: Project) =>
     saveProject({
@@ -269,6 +273,17 @@ function ProjectsTab({ toast }: { toast: (m: string) => void }) {
     });
   const toggleFeatured = (project: Project) =>
     saveProject({ ...project, featured: !project.featured });
+  const moveProject = (targetId: string) => {
+    if (!draggingId) return;
+    const nextIds = reorderIds(
+      list.map((item) => item.id),
+      draggingId,
+      targetId,
+    );
+    reorderProjects(nextIds);
+    setDraggingId(null);
+    toast("Project order updated");
+  };
 
   return (
     <div>
@@ -282,7 +297,7 @@ function ProjectsTab({ toast }: { toast: (m: string) => void }) {
         </button>
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] overflow-x-auto">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[920px] text-sm">
           <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
             <tr>
               <th className="text-left px-4 py-3">Title</th>
@@ -295,8 +310,32 @@ function ProjectsTab({ toast }: { toast: (m: string) => void }) {
           </thead>
           <tbody className="divide-y divide-[color:var(--line-soft)]">
             {list.map((p) => (
-              <tr key={p.id} className="hover:bg-[color:var(--hover)]">
-                <td className="px-4 py-4 text-[var(--fg)]">{p.title}</td>
+              <tr
+                key={p.id}
+                draggable
+                onDragStart={() => setDraggingId(p.id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => moveProject(p.id)}
+                onDragEnd={() => setDraggingId(null)}
+                className={`hover:bg-[color:var(--hover)] ${
+                  draggingId === p.id ? "opacity-50" : ""
+                }`}
+              >
+                <td className="px-4 py-4 text-[var(--fg)]">
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-[var(--muted-2)]" />
+                    <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md bg-[color:var(--surface-2)]">
+                      {p.coverImage ? (
+                        <img
+                          src={p.coverImage}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                    <span className="line-clamp-2 leading-snug">{p.title}</span>
+                  </div>
+                </td>
                 <td className="px-4 py-4 text-[var(--muted)]">{p.category}</td>
                 <td className="px-4 py-4 text-[var(--muted)]">{p.year}</td>
                 <td className="px-4 py-4">
@@ -483,93 +522,132 @@ function ProjectForm({
 /* ---------------- LAB TAB ---------------- */
 
 function LabTab({ toast }: { toast: (m: string) => void }) {
-  const { content, saveLabItem, deleteLabItem } = useContent();
-  const items = content.labItems;
+  const { content, saveLabItem, deleteLabItem, reorderLabItems } = useContent();
+  const items = sortByDisplayOrder(content.labItems);
   const [panel, setPanel] = useState<null | { id?: string }>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const toggleFeatured = (item: LabItem) =>
     saveLabItem({ ...item, featured: !item.featured });
+  const moveLabItem = (targetId: string) => {
+    if (!draggingId) return;
+    const nextIds = reorderIds(
+      items.map((item) => item.id),
+      draggingId,
+      targetId,
+    );
+    reorderLabItems(nextIds);
+    setDraggingId(null);
+    toast("Lab order updated");
+  };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-4 mb-6 max-md:flex-col max-md:items-stretch">
         <div className="text-[var(--fg-2)]">{items.length} lab items</div>
         <button
           onClick={() => setPanel({})}
-          className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] flex items-center gap-2 hover:bg-[var(--accent)]"
+          className="h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--app-bg)] flex items-center justify-center gap-2 hover:bg-[var(--accent)]"
         >
           <Plus className="w-4 h-4" /> Add Lab Item
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
-        {items.map((it) => (
-          <div
-            key={it.id}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-5 flex gap-4 max-md:p-4"
-          >
-            <div className="w-24 h-24 rounded-lg bg-[color:var(--surface-2)] flex-shrink-0 overflow-hidden">
-              {it.coverImage && (
-                <img
-                  src={it.coverImage}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[var(--fg)] truncate">{it.title}</span>
-                <span className="text-xs text-[var(--muted-2)]">- {it.type}</span>
-              </div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2 py-0.5 rounded-full text-xs bg-[color:var(--accent-soft)] text-[var(--accent)]">
-                  {it.status}
-                </span>
-                {it.hidden && (
-                  <span className="px-2 py-0.5 rounded-full text-xs bg-[color:var(--surface-2)] text-[var(--muted)]">
-                    Hidden
+      <div className="rounded-2xl border border-[color:var(--line)] overflow-x-auto">
+        <table className="w-full min-w-[920px] text-sm">
+          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
+            <tr>
+              <th className="text-left px-4 py-3">Title</th>
+              <th className="text-left px-4 py-3">Type</th>
+              <th className="text-left px-4 py-3">Year</th>
+              <th className="text-left px-4 py-3">Status</th>
+              <th className="text-left px-4 py-3">Featured</th>
+              <th className="text-right px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[color:var(--line-soft)]">
+            {items.map((it) => (
+              <tr
+                key={it.id}
+                draggable
+                onDragStart={() => setDraggingId(it.id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => moveLabItem(it.id)}
+                onDragEnd={() => setDraggingId(null)}
+                className={`hover:bg-[color:var(--hover)] ${
+                  draggingId === it.id ? "opacity-50" : ""
+                }`}
+              >
+                <td className="px-4 py-4 text-[var(--fg)]">
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-[var(--muted-2)]" />
+                    <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md bg-[color:var(--surface-2)]">
+                      {it.coverImage ? (
+                        <img
+                          src={it.coverImage}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                    <span className="line-clamp-2 leading-snug">{it.title}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-4 text-[var(--muted)]">{it.type}</td>
+                <td className="px-4 py-4 text-[var(--muted)]">{it.year ?? "-"}</td>
+                <td className="px-4 py-4">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs ${
+                      it.hidden
+                        ? "bg-[color:var(--surface-2)] text-[var(--muted)]"
+                        : "bg-[color:var(--accent-soft)] text-[var(--accent)]"
+                    }`}
+                  >
+                    {it.hidden ? "Hidden" : it.status}
                   </span>
-                )}
-                {it.featured && (
-                  <span className="px-2 py-0.5 rounded-full text-xs bg-amber-400/15 text-amber-500">
-                    Featured
-                  </span>
-                )}
-              </div>
-              <p className="text-[var(--muted)] text-sm line-clamp-2">
-                {summaryFromRichContent(it.richContent, it.content)}
-              </p>
-              <div className="flex gap-1 mt-3">
-                <IconBtn
-                  onClick={() => toggleFeatured(it)}
-                  icon={Star}
-                  label={it.featured ? "Unfeature" : "Feature"}
-                  active={!!it.featured}
-                />
-                <IconBtn
-                  onClick={() => setPanel({ id: it.id })}
-                  icon={Edit3}
-                  label="Edit"
-                />
-                <IconBtn
-                  onClick={() => saveLabItem({ ...it, hidden: !it.hidden })}
-                  icon={it.hidden ? Eye : EyeOff}
-                  label="Hide"
-                />
-                <IconBtn
-                  onClick={() => {
-                    if (confirm(`Delete "${it.title}"?`)) {
-                      deleteLabItem(it.id);
-                      toast("Lab item deleted");
-                    }
-                  }}
-                  icon={Trash2}
-                  label="Delete"
-                  danger
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+                </td>
+                <td className="px-4 py-4">
+                  <button
+                    onClick={() => toggleFeatured(it)}
+                    className={`w-7 h-7 rounded-full grid place-items-center ${
+                      it.featured
+                        ? "bg-amber-400/20 text-amber-500"
+                        : "border border-[color:var(--line)] text-[var(--muted-2)]"
+                    }`}
+                  >
+                    <Star
+                      className="w-3.5 h-3.5"
+                      fill={it.featured ? "currentColor" : "none"}
+                    />
+                  </button>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="flex items-center justify-end gap-1">
+                    <IconBtn
+                      onClick={() => setPanel({ id: it.id })}
+                      icon={Edit3}
+                      label="Edit"
+                    />
+                    <IconBtn
+                      onClick={() => saveLabItem({ ...it, hidden: !it.hidden })}
+                      icon={it.hidden ? Eye : EyeOff}
+                      label={it.hidden ? "Show" : "Hide"}
+                    />
+                    <IconBtn
+                      onClick={() => {
+                        if (confirm(`Delete "${it.title}"?`)) {
+                          deleteLabItem(it.id);
+                          toast("Lab item deleted");
+                        }
+                      }}
+                      icon={Trash2}
+                      label="Delete"
+                      danger
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {panel && (
@@ -605,6 +683,7 @@ function LabForm({
     id: initial?.id ?? "",
     title: initial?.title ?? "",
     type: initial?.type ?? "Web Tools",
+    year: initial?.year ?? new Date().getFullYear(),
     status: initial?.status ?? "Idea",
     github: initial?.github ?? "",
     demo: initial?.demo ?? "",
@@ -612,6 +691,7 @@ function LabForm({
     richContent: ensureUniqueBlocks(initial?.richContent ?? textToRichBlocks(initial?.content)),
     coverImage: initial?.coverImage ?? "",
     featured: !!initial?.featured,
+    sortOrder: initial?.sortOrder,
   });
   const uploadSlug = slugify(f.title || initial?.id || "untitled-lab");
   const uploadBase = `lab/${uploadSlug}`;
@@ -626,6 +706,7 @@ function LabForm({
           slug,
           title: f.title,
           type: f.type,
+          year: f.year,
           status: f.status as LabItem["status"],
           github: f.github,
           demo: f.demo,
@@ -633,6 +714,7 @@ function LabForm({
           richContent: f.richContent,
           coverImage: f.coverImage,
           featured: f.featured,
+          sortOrder: f.sortOrder,
           hidden: initial?.hidden ?? false,
         });
       }}
@@ -660,16 +742,19 @@ function LabForm({
               options={["GitHub", "Web Tools", "Mini Program", "Design Experiments", "Notes"]}
               onChange={(v) => setF({ ...f, type: v })}
             />
+            <Field label="Year" value={String(f.year)} onChange={(v) => setF({ ...f, year: Number(v) || 0 })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
             <Select
               label="Status"
               value={f.status}
               options={["Live", "Building", "Idea", "Archived"]}
               onChange={(v) => setF({ ...f, status: v })}
             />
+            <Toggle label="Featured" checked={f.featured} onChange={(v) => setF({ ...f, featured: v })} />
           </div>
           <Field label="GitHub URL" value={f.github} onChange={(v) => setF({ ...f, github: v })} />
           <Field label="Demo URL" value={f.demo} onChange={(v) => setF({ ...f, demo: v })} />
-          <Toggle label="Featured" checked={f.featured} onChange={(v) => setF({ ...f, featured: v })} />
         </aside>
       </div>
       <div className="sticky bottom-0 z-20 -mx-6 mt-5 flex justify-end gap-2 border-t border-[color:var(--line)] bg-[var(--app-bg)]/95 px-6 py-5 backdrop-blur max-md:-mx-4 max-md:px-4">

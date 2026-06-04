@@ -86,6 +86,7 @@ export type LabItem = {
   slug?: string;
   title: string;
   type: string;
+  year?: number;
   status: "Live" | "Building" | "Idea" | "Archived";
   coverImage?: string;
   github?: string;
@@ -97,6 +98,7 @@ export type LabItem = {
   externalUrl?: string;
   featured?: boolean;
   hidden?: boolean;
+  sortOrder?: number;
 };
 
 export const labItems: LabItem[] = [];

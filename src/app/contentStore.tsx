@@ -12,6 +12,7 @@ import {
   type LabItem,
   type Project,
 } from "./data";
+import { withDefaultSortOrder } from "./contentOrdering";
 import { uploadToOss } from "./ossUpload";
 
 export type SocialLink = {
@@ -77,8 +78,10 @@ type ContentContextValue = {
   content: SiteContent;
   saveProject: (project: Project) => void;
   deleteProject: (id: string) => void;
+  reorderProjects: (ids: string[]) => void;
   saveLabItem: (item: LabItem) => void;
   deleteLabItem: (id: string) => void;
+  reorderLabItems: (ids: string[]) => void;
   saveLink: (link: ManagedLink) => void;
   deleteLink: (id: string) => void;
   submitContact: (message: Omit<ContactMessage, "id" | "createdAt">) => void;
@@ -188,8 +191,9 @@ function normalizeItemId(item: { id?: string; slug?: string; title?: string }, p
 }
 
 function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
-  const projects = (value?.projects?.length ? value.projects : defaultContent.projects).map(
-    (project, index) => {
+  const projects = withDefaultSortOrder(
+    (value?.projects?.length ? value.projects : defaultContent.projects).map(
+      (project) => {
       const { description: _description, role: _role, ...rest } = project as Project & {
         description?: string;
         role?: string;
@@ -198,11 +202,12 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
         ...rest,
         id: normalizeItemId(project, "work"),
         slug: project.slug || normalizeItemId(project, "work"),
-        sortOrder: project.sortOrder ?? index + 1,
       };
     },
+    ),
   );
-  const lab = (value?.labItems?.length ? value.labItems : defaultContent.labItems).map((item) => {
+  const currentYear = new Date().getFullYear();
+  const lab = withDefaultSortOrder((value?.labItems?.length ? value.labItems : defaultContent.labItems).map((item) => {
     const { description: _description, techStack: _techStack, ...rest } = item as LabItem & {
       description?: string;
       techStack?: string;
@@ -211,10 +216,11 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
       ...rest,
       id: normalizeItemId(item, "lab"),
       slug: item.slug || normalizeItemId(item, "lab"),
+      year: item.year ?? currentYear,
       hidden: item.hidden ?? false,
       featured: !!item.featured,
     };
-  });
+  }));
 
   return {
     ...defaultContent,
@@ -317,6 +323,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           projects: current.projects.filter((item) => item.id !== id),
         }));
       },
+      reorderProjects(ids) {
+        const order = new Map(ids.map((id, index) => [id, index + 1]));
+        setContent((current) => ({
+          ...current,
+          projects: current.projects.map((item) => ({
+            ...item,
+            sortOrder: order.get(item.id) ?? item.sortOrder ?? ids.length + 1,
+          })),
+        }));
+      },
       saveLabItem(item) {
         setContent((current) => {
           const { description: _description, techStack: _techStack, ...cleanItem } = item as LabItem & {
@@ -343,6 +359,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         setContent((current) => ({
           ...current,
           labItems: current.labItems.filter((item) => item.id !== id),
+        }));
+      },
+      reorderLabItems(ids) {
+        const order = new Map(ids.map((id, index) => [id, index + 1]));
+        setContent((current) => ({
+          ...current,
+          labItems: current.labItems.map((item) => ({
+            ...item,
+            sortOrder: order.get(item.id) ?? item.sortOrder ?? ids.length + 1,
+          })),
         }));
       },
       saveLink(link) {

@@ -125,6 +125,10 @@ body,
   min-height: 100%;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background-color: var(--app-bg);
   background-image: radial-gradient(

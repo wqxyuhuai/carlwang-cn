@@ -687,6 +687,7 @@ async function buildEntry(page) {
         slug,
         title,
         type: categories[0] || "Notes",
+        year: propNumber(page.properties, "Year"),
         status: propSelect(page.properties, "Status") || "Idea",
         coverImage,
         github: propUrl(page.properties, "GitHub URL") || undefined,
@@ -721,7 +722,6 @@ async function buildEntry(page) {
       externalUrl: propUrl(page.properties, "Demo URL") || undefined,
       status: normalizeWorkStatus(propSelect(page.properties, "Status")),
       featured: propCheckbox(page.properties, "Featured"),
-      sortOrder: 1,
     },
   };
 }

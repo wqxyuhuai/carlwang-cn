@@ -1,11 +1,12 @@
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
+import { sortByDisplayOrder } from "../contentOrdering";
 import { NotionContentView, textToRichBlocks } from "./NotionContent";
 
 export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
   const { content } = useContent();
-  const labItems = content.labItems.filter((entry) => !entry.hidden);
+  const labItems = sortByDisplayOrder(content.labItems.filter((entry) => !entry.hidden));
   const item = labItems.find((l) => l.id === id) ?? labItems[0];
 
   if (!item) {

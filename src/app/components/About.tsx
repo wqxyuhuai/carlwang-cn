@@ -28,16 +28,6 @@ const focus = [
   "Creative Tools",
 ];
 
-const tools = [
-  "Figma",
-  "Adobe Illustrator",
-  "Photoshop",
-  "After Effects",
-  "Blender",
-  "GitHub",
-  "AI Tools",
-];
-
 export function About() {
   const { content, submitContact } = useContent();
   const { socials, settings } = content;
@@ -51,37 +41,75 @@ export function About() {
 
   return (
     <div>
-      <section className="content-shell pt-24 pb-12 max-md:pt-12 max-md:pb-8">
-        <h1
-          className="display max-w-4xl text-[var(--fg)]"
-          style={{ fontSize: "clamp(46px, 14vw, 132px)", lineHeight: 0.94 }}
-        >
-          About <span className="text-[var(--muted)]">Carl</span>
-        </h1>
-      </section>
-
-      <section className="content-shell grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-5 max-md:p-6">
-          <div className="mb-6 h-24 w-24 rounded-full bg-gradient-to-br from-[var(--accent)] via-[color:var(--accent-soft)] to-[color:var(--surface-2)]" />
-          <div className="text-3xl tracking-tight text-[var(--fg)]">
-            {settings.name}
-          </div>
-          <div className="mt-1 text-[var(--muted-2)]">
-            {settings.role}
-            <br />
+      <section className="content-shell grid grid-cols-1 gap-10 pt-20 pb-16 lg:grid-cols-12 max-md:pt-10 max-md:pb-10">
+        <div className="lg:col-span-8">
+          <div className="mb-5 inline-flex rounded-full border border-[color:var(--line)] px-4 py-2 text-sm text-[var(--muted)]">
             Wuxi / Remote
           </div>
+          <h1
+            className="display max-w-4xl text-[var(--fg)]"
+            style={{ fontSize: "clamp(48px, 11vw, 104px)", lineHeight: 0.96 }}
+          >
+            {settings.name}
+          </h1>
+          <p className="mt-6 max-w-3xl text-2xl leading-snug tracking-tight text-[var(--fg-2)] max-md:text-xl">
+            {settings.role}
+          </p>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-[var(--muted)]">
+            {settings.bio}
+          </p>
         </div>
 
-        <div className="space-y-6 lg:col-span-7">
-          <TagPanel title="Focus Areas" items={focus} strong />
-          <TagPanel title="Toolbox" items={tools} />
+        <div className="lg:col-span-4">
+          <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6">
+            <div className="mb-5 h-20 w-20 rounded-full bg-[var(--accent)]" />
+            <div className="text-sm uppercase tracking-[0.18em] text-[var(--muted-2)]">
+              Focus
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {focus.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-[color:var(--line)] px-3 py-1.5 text-sm text-[var(--fg-2)]"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="content-shell py-20 max-md:py-12">
-        <div className="mb-8 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
-          Other Places
+      <section className="content-shell py-10 max-md:py-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[
+            ["Product systems", "Interfaces, workflows, dashboards"],
+            ["Visual direction", "Brand, campaign, presentation"],
+            ["Creative build", "Motion, experiments, small tools"],
+          ].map(([title, body]) => (
+            <div
+              key={title}
+              className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6"
+            >
+              <div className="text-xl tracking-tight text-[var(--fg)]">
+                {title}
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+                {body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="content-shell py-14 max-md:py-10">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <h2 className="text-3xl tracking-tight text-[var(--fg)]">
+            Elsewhere
+          </h2>
+          <div className="hidden text-sm text-[var(--muted)] md:block">
+            Selected profiles and contact paths
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {socials.map((s) => {
@@ -92,7 +120,7 @@ export function About() {
                 href={s.href}
                 target={s.href.startsWith("mailto:") ? undefined : "_blank"}
                 rel={s.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                className="group flex items-center justify-between rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] px-6 py-5 transition-colors hover:border-[color:var(--accent)]/40"
+                className="group flex items-center justify-between rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] px-6 py-5 transition-colors hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--hover)]"
               >
                 <div className="flex items-center gap-2">
                   {Icon && (
@@ -110,15 +138,15 @@ export function About() {
       <section className="content-shell py-16 max-md:py-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <div className="mb-6 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
-              Contact
-            </div>
             <h2
               className="display text-[var(--fg)]"
               style={{ fontSize: "clamp(34px, 10vw, 52px)", lineHeight: 1.02 }}
             >
               Get in touch
             </h2>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--muted)]">
+              For product, interface, brand, and visual system work.
+            </p>
           </div>
           <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-7 max-md:p-5">
             {sent ? (
@@ -194,36 +222,6 @@ export function About() {
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function TagPanel({
-  title,
-  items,
-  strong = false,
-}: {
-  title: string;
-  items: string[];
-  strong?: boolean;
-}) {
-  return (
-    <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 max-md:p-6">
-      <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
-        {title}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <span
-            key={item}
-            className={`rounded-full border border-[color:var(--line)] bg-[color:var(--hover)] px-3 py-1.5 text-sm ${
-              strong ? "text-[var(--fg)]" : "text-[var(--fg-2)]"
-            }`}
-          >
-            {item}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
