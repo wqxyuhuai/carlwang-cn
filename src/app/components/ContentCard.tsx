@@ -31,7 +31,7 @@ export function ContentCard({
         ) : null}
       </div>
       <div className="min-h-[3.2rem] w-full pt-3">
-        <div className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-[var(--fg)] group-hover:underline">
+        <div className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-[var(--fg)] transition-opacity group-hover:opacity-70">
           {title}
         </div>
       </div>

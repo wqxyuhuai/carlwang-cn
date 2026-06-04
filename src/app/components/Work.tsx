@@ -29,17 +29,17 @@ export function Work({ openProject }: { openProject: (id: string) => void }) {
 
   return (
     <div>
-      <section className="sticky top-[76px] z-30 max-md:top-[112px]">
-        <div className="absolute bottom-0 left-0 right-0 top-0 pointer-events-none frosted-bar" />
-        <div className="content-shell relative flex items-center gap-2 overflow-x-auto py-5 max-md:py-3">
+      <section className="tab-glass-region sticky top-11 z-30 py-5 max-md:top-[96px] max-md:py-3">
+        <div className="tab-glass-layer" />
+        <div className="tab-controls content-shell flex items-center gap-2.5 overflow-x-auto">
           {filters.map((c) => (
             <button
               key={c}
               onClick={() => setActive(c)}
-              className={`h-9 shrink-0 px-4 rounded-full text-sm transition-all ${
+              className={`h-9 shrink-0 rounded-full px-4 text-sm transition-all duration-300 ${
                 active === c
                   ? "bg-[var(--fg)] text-[var(--app-bg)]"
-                  : "border border-[color:var(--line)] text-[var(--fg-2)] hover:bg-[color:var(--hover)] hover:border-[color:var(--line-strong)]"
+                  : "tab-pill text-[var(--fg-2)] hover:text-[var(--fg)]"
               }`}
             >
               {c}
@@ -51,7 +51,7 @@ export function Work({ openProject }: { openProject: (id: string) => void }) {
         </div>
       </section>
 
-      <section className="content-shell py-10 max-md:py-7">
+      <section className="content-shell py-9 max-md:py-7">
         <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 max-md:gap-y-7">
           {visible.map((p) => (
             <ContentCard
