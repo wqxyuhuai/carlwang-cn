@@ -32,14 +32,16 @@ export function Home({
   openLab: (id: string) => void;
 }) {
   const { content } = useContent();
-  const featuredWork = sortByDisplayOrder(
-    content.projects.filter(
-      (project) => project.status === "Published" && project.featured,
-    ),
-  ).slice(0, 3);
-  const featuredLabItems = sortByDisplayOrder(
-    content.labItems.filter((item) => !item.hidden && item.featured),
-  ).slice(0, 3);
+  const publishedWork = sortByDisplayOrder(
+    content.projects.filter((project) => project.status === "Published"),
+  );
+  const publishedLabItems = sortByDisplayOrder(
+    content.labItems.filter((item) => !item.hidden),
+  );
+  const featuredWorkSource = publishedWork.filter((project) => project.featured);
+  const featuredLabSource = publishedLabItems.filter((item) => item.featured);
+  const featuredWork = (featuredWorkSource.length ? featuredWorkSource : publishedWork).slice(0, 3);
+  const featuredLabItems = (featuredLabSource.length ? featuredLabSource : publishedLabItems).slice(0, 3);
   const { settings, socials } = content;
 
   return (

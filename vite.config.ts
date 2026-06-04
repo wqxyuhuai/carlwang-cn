@@ -31,6 +31,16 @@ export default defineConfig({
     },
   },
 
+  server: {
+    proxy: {
+      "/__content": {
+        target: "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com",
+        changeOrigin: true,
+        rewrite: (url) => url.replace(/^\/__content/, "/uploads"),
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })

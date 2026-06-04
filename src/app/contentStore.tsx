@@ -91,9 +91,14 @@ type ContentContextValue = {
 };
 
 const STORAGE_KEY = "cw-personal-hub-content-v1";
+const DEFAULT_CONTENT_URL =
+  "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json";
+const env = (import.meta as ImportMeta & {
+  env?: Record<string, string | boolean>;
+}).env;
 const PUBLISHED_CONTENT_URL =
-  ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_CONTENT_URL ||
-    "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json");
+  (env?.VITE_CONTENT_URL as string | undefined) ||
+  (env?.DEV ? "/__content/site-content.json" : DEFAULT_CONTENT_URL);
 
 const defaultSettings: SiteSettings = {
   name: "Carl Wang",
