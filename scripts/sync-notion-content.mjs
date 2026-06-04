@@ -1,17 +1,20 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = process.cwd();
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ENV_PATH = path.join(ROOT, ".env.local");
 const NOTION_VERSION = "2022-06-28";
 const DEFAULT_CONTENT_URL =
   "https://carlwang-cn.oss-cn-shanghai.aliyuncs.com/uploads/site-content.json";
 const FETCH_TIMEOUT_MS = Number(process.env.SYNC_FETCH_TIMEOUT_MS || 90000);
 const FETCH_RETRIES = Number(process.env.SYNC_FETCH_RETRIES || 3);
-const NOTION_CONCURRENCY = Number(process.env.SYNC_NOTION_CONCURRENCY || 3);
-const BLOCK_CONCURRENCY = Number(process.env.SYNC_BLOCK_CONCURRENCY || 4);
-const MEDIA_CONCURRENCY = Number(process.env.SYNC_MEDIA_CONCURRENCY || 2);
+const NOTION_CONCURRENCY = Number(process.env.SYNC_NOTION_CONCURRENCY || 2);
+const BLOCK_CONCURRENCY = Number(process.env.SYNC_BLOCK_CONCURRENCY || 1);
+const MEDIA_CONCURRENCY = Number(process.env.SYNC_MEDIA_CONCURRENCY || 1);
+const PAGE_TIMEOUT_MS = Number(process.env.SYNC_PAGE_TIMEOUT_MS || 45 * 60 * 1000);
+const HEARTBEAT_MS = Number(process.env.SYNC_HEARTBEAT_MS || 30000);
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
 const PLACEHOLDER_PROJECT_IDS = new Set([
   "wattdesk",
@@ -66,6 +69,44 @@ function envList(name) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+let currentStep = "starting";
+
+function setStep(value) {
+  currentStep = value;
+}
+
+function startHeartbeat() {
+  let lastStep = "";
+  return setInterval(() => {
+    const suffix = currentStep === lastStep ? "still " : "";
+    console.log(`[heartbeat] ${suffix}${currentStep}`);
+    lastStep = currentStep;
+  }, HEARTBEAT_MS);
+}
+
+async function withTimeout(promise, ms, label) {
+  let timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`)),
+          ms,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "";
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function retryDelayMs(attempt, response) {
@@ -415,7 +456,12 @@ async function download(url) {
   }
   const contentType =
     response.headers.get("content-type") || "application/octet-stream";
+  const contentLength = Number(response.headers.get("content-length") || 0);
+  if (contentLength) {
+    console.log(`  Download size: ${formatBytes(contentLength)} (${contentType})`);
+  }
   const buffer = Buffer.from(await response.arrayBuffer());
+  console.log(`  Downloaded: ${formatBytes(buffer.length) || `${buffer.length} bytes`}`);
   return { buffer, contentType };
 }
 
@@ -475,6 +521,7 @@ async function findExistingMediaObject(prefix, label, suffix, extCandidates) {
 
 async function uploadBuffer(buffer, contentType, objectKey) {
   const url = ossUrlForObjectKey(objectKey);
+  console.log(`  PUT ${objectKey} (${formatBytes(buffer.length) || `${buffer.length} bytes`})`);
   const response = await fetchWithRetry(url, {
     method: "PUT",
     headers: ossRequestHeaders("PUT", contentType, objectKey),
@@ -491,6 +538,7 @@ async function uploadRemoteMediaNow(url, prefix, label, suffix) {
   if (!url) {
     throw new Error(`Missing media URL for ${prefix}/${label}-${suffix}`);
   }
+  setStep(`checking ${label} ${suffix}`);
   const existingObjectKey = await findExistingMediaObject(
     prefix,
     label,
@@ -502,6 +550,7 @@ async function uploadRemoteMediaNow(url, prefix, label, suffix) {
     return publicUrlForObjectKey(existingObjectKey);
   }
 
+  setStep(`downloading ${label} ${suffix}`);
   console.log(`  Downloading ${label} ${suffix}: ${url.slice(0, 96)}`);
   const { buffer, contentType } = await download(url);
   const fallbackExt = extFromContentType(contentType);
@@ -514,6 +563,7 @@ async function uploadRemoteMediaNow(url, prefix, label, suffix) {
     return publicUrlForObjectKey(objectKey);
   }
 
+  setStep(`uploading ${label} ${suffix}`);
   console.log(`  Uploading ${label} ${suffix}: ${objectKey}`);
   const uploaded = await uploadBuffer(buffer, contentType, objectKey);
   console.log(`  Uploaded ${label} ${suffix}`);
@@ -606,19 +656,26 @@ async function buildEntry(page) {
   const slug = slugify(title, `notion-${idBase}`);
   const prefix = `${type.toLowerCase()}/${slug}`;
   const categories = propMulti(page.properties, "Category").map(normalizeCategory);
+  setStep(`listing top-level blocks for ${title}`);
   const blocks = await listBlocks(page.id);
+  console.log(`  Found ${blocks.length} top-level block(s).`);
 
   const galleryImages = [];
   const videos = [];
+  setStep(`building rich content for ${title}`);
   const richContent = await blocksToRichBlocks(blocks, prefix);
   galleryImages.splice(0, galleryImages.length, ...collectBlockValues(richContent, "image"));
   videos.splice(0, videos.length, ...collectBlockValues(richContent, "video"));
   const textParts = collectText(richContent);
+  console.log(
+    `  Built rich content: ${richContent.length} block(s), ${galleryImages.length} image(s), ${videos.length} video(s).`,
+  );
 
   const coverFile = propFiles(page.properties, "Cover")[0];
   let coverImage = galleryImages[0] || "";
   const coverUrl = fileUrl(coverFile);
   if (coverUrl) {
+    setStep(`uploading cover for ${title}`);
     coverImage = await uploadRemoteMedia(coverUrl, prefix, "cover", "00");
   }
 
@@ -670,11 +727,23 @@ async function buildEntry(page) {
 }
 
 async function blocksToRichBlocks(blocks, prefix) {
-  return (
-    await mapWithConcurrency(blocks, BLOCK_CONCURRENCY, (block) =>
-      notionBlockToRichBlock(block, prefix),
-    )
-  ).filter(Boolean);
+  if (BLOCK_CONCURRENCY > 1) {
+    return (
+      await mapWithConcurrency(blocks, BLOCK_CONCURRENCY, (block, index) => {
+        setStep(`processing block ${index + 1}/${blocks.length} (${block.type})`);
+        return notionBlockToRichBlock(block, prefix);
+      })
+    ).filter(Boolean);
+  }
+
+  const output = [];
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    setStep(`processing block ${index + 1}/${blocks.length} (${block.type})`);
+    const richBlock = await notionBlockToRichBlock(block, prefix);
+    if (richBlock) output.push(richBlock);
+  }
+  return output;
 }
 
 async function notionBlockToRichBlock(block, prefix) {
@@ -853,75 +922,92 @@ async function markSynced(pageId) {
 
 async function main() {
   loadEnv(ENV_PATH);
+  const heartbeat = startHeartbeat();
   const startedAt = Date.now();
-  const pageIds = envList("SYNC_PAGE_IDS");
-  const pageLimit = Number(process.env.SYNC_PAGE_LIMIT || 0);
-  const dryRun = envFlag("SYNC_DRY_RUN");
-  const skipMark = envFlag("SYNC_SKIP_MARK");
-  const syncAll = envFlag("SYNC_ALL");
-  const queriedPages = pageIds.length
-    ? await getPagesByIds(pageIds)
-    : await querySyncPages(required("NOTION_DATABASE_ID"), { all: syncAll });
-  const pages = pageLimit > 0 ? queriedPages.slice(0, pageLimit) : queriedPages;
+  try {
+    setStep("loading sync page list");
+    const pageIds = envList("SYNC_PAGE_IDS");
+    const pageLimit = Number(process.env.SYNC_PAGE_LIMIT || 0);
+    const dryRun = envFlag("SYNC_DRY_RUN");
+    const skipMark = envFlag("SYNC_SKIP_MARK");
+    const syncAll = envFlag("SYNC_ALL");
+    const queriedPages = pageIds.length
+      ? await getPagesByIds(pageIds)
+      : await querySyncPages(required("NOTION_DATABASE_ID"), { all: syncAll });
+    const pages = pageLimit > 0 ? queriedPages.slice(0, pageLimit) : queriedPages;
 
-  console.log(
-    `Found ${queriedPages.length} page(s); syncing ${pages.length}${
-      dryRun ? " in dry-run mode" : ""
-    }.`,
-  );
-  if (syncAll) console.log("SYNC_ALL is enabled; status filter is disabled.");
+    console.log(
+      `Found ${queriedPages.length} page(s); syncing ${pages.length}${
+        dryRun ? " in dry-run mode" : ""
+      }.`,
+    );
+    console.log(
+      `Concurrency: notion=${NOTION_CONCURRENCY}, blocks=${BLOCK_CONCURRENCY}, media=${MEDIA_CONCURRENCY}, page timeout=${Math.round(PAGE_TIMEOUT_MS / 1000)}s.`,
+    );
+    if (syncAll) console.log("SYNC_ALL is enabled; status filter is disabled.");
 
-  const content = await fetchPublishedContent();
-  content.projects = Array.isArray(content.projects) ? content.projects : [];
-  content.labItems = Array.isArray(content.labItems) ? content.labItems : [];
-  const removedPlaceholders = removePlaceholderContent(content);
-  const migratedContent = migratePublishedContent(content);
-  const processedPages = [];
+    setStep("fetching published site content");
+    const content = await fetchPublishedContent();
+    content.projects = Array.isArray(content.projects) ? content.projects : [];
+    content.labItems = Array.isArray(content.labItems) ? content.labItems : [];
+    const removedPlaceholders = removePlaceholderContent(content);
+    const migratedContent = migratePublishedContent(content);
+    const processedPages = [];
 
-  for (const page of pages) {
-    const pageStartedAt = Date.now();
-    const title = propTitle(page.properties);
-    console.log(`Syncing: ${title}`);
-    const entry = await buildEntry(page);
-    if (entry.kind === "work") {
-      content.projects = upsertById(content.projects, entry.item);
-    } else {
-      content.labItems = upsertById(content.labItems, entry.item);
-    }
-    processedPages.push({ id: page.id, title });
-    console.log(`Built: ${title} (${Math.round((Date.now() - pageStartedAt) / 1000)}s)`);
+    for (const page of pages) {
+      const pageStartedAt = Date.now();
+      const title = propTitle(page.properties);
+      console.log(`Syncing: ${title}`);
+      setStep(`building page ${title}`);
+      const entry = await withTimeout(buildEntry(page), PAGE_TIMEOUT_MS, `Page "${title}"`);
+      if (entry.kind === "work") {
+        content.projects = upsertById(content.projects, entry.item);
+      } else {
+        content.labItems = upsertById(content.labItems, entry.item);
+      }
+      processedPages.push({ id: page.id, title });
+      console.log(`Built: ${title} (${Math.round((Date.now() - pageStartedAt) / 1000)}s)`);
 
-    if (!dryRun) {
-      const uploadedUrl = await uploadJson(content);
-      console.log(`Uploaded site content after ${title}: ${uploadedUrl}`);
+      if (!dryRun) {
+        setStep(`uploading site content after ${title}`);
+        console.log(`Uploading site content after ${title}...`);
+        const uploadedUrl = await uploadJson(content);
+        console.log(`Uploaded site content after ${title}: ${uploadedUrl}`);
 
-      if (!skipMark) {
-        await markSynced(page.id);
-        console.log(`Marked synced: ${title}`);
+        if (!skipMark) {
+          setStep(`marking synced ${title}`);
+          console.log(`Marking synced: ${title}`);
+          await markSynced(page.id);
+          console.log(`Marked synced: ${title}`);
+        }
       }
     }
-  }
 
-  if (!pages.length && !removedPlaceholders && !migratedContent) {
-    console.log("Nothing to upload.");
-    return;
-  }
+    if (!pages.length && !removedPlaceholders && !migratedContent) {
+      console.log("Nothing to upload.");
+      return;
+    }
 
-  if (dryRun) {
-    console.log("Dry run complete; skipped site content upload and Notion status updates.");
-    return;
-  }
+    if (dryRun) {
+      console.log("Dry run complete; skipped site content upload and Notion status updates.");
+      return;
+    }
 
-  if (!processedPages.length) {
-    const uploadedUrl = await uploadJson(content);
-    console.log(`Uploaded site content: ${uploadedUrl}`);
-  }
+    if (!processedPages.length) {
+      setStep("uploading migrated site content");
+      const uploadedUrl = await uploadJson(content);
+      console.log(`Uploaded site content: ${uploadedUrl}`);
+    }
 
-  if (skipMark && processedPages.length) {
-    console.log("SYNC_SKIP_MARK is enabled; skipped Notion status updates.");
-  }
+    if (skipMark && processedPages.length) {
+      console.log("SYNC_SKIP_MARK is enabled; skipped Notion status updates.");
+    }
 
-  console.log(`Done in ${Math.round((Date.now() - startedAt) / 1000)}s.`);
+    setStep("done");
+    console.log(`Done in ${Math.round((Date.now() - startedAt) / 1000)}s.`);
+  } finally {
+    clearInterval(heartbeat);
+  }
 }
 
 main().catch((error) => {
