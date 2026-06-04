@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy site
 
 on:
   push:
@@ -34,6 +34,13 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
