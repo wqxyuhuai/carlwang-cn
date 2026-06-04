@@ -281,7 +281,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    fetch(`${PUBLISHED_CONTENT_URL}?t=${Date.now()}`)
+    fetch(PUBLISHED_CONTENT_URL)
       .then((response) => (response.ok ? response.json() : null))
       .then((published) => {
         if (published) {

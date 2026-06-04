@@ -1,5 +1,12 @@
 import type { OssSettings } from "./contentStore";
 
+const LONG_LIVED_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const CONTENT_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300";
+
+type UploadOptions = {
+  cacheControl?: string;
+};
+
 function cleanPart(value: string) {
   return value.trim().replace(/^\/+|\/+$/g, "");
 }
@@ -20,6 +27,26 @@ function randomName(file: File) {
   const extension = file.name.includes(".") ? file.name.split(".").pop() : "";
   const suffix = extension ? `.${extension}` : "";
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}${suffix}`;
+}
+
+function cacheControlForUpload(contentType: string, objectName?: string) {
+  const normalizedType = contentType.toLowerCase();
+  const normalizedName = (objectName || "").toLowerCase();
+
+  if (normalizedName.endsWith(".json") || normalizedType.includes("application/json")) {
+    return CONTENT_CACHE_CONTROL;
+  }
+
+  if (
+    normalizedType.startsWith("image/") ||
+    normalizedType.startsWith("video/") ||
+    normalizedType.startsWith("audio/") ||
+    normalizedType.startsWith("font/")
+  ) {
+    return LONG_LIVED_CACHE_CONTROL;
+  }
+
+  return "public, max-age=86400";
 }
 
 async function hmacSha1(message: string, secret: string) {
@@ -53,6 +80,7 @@ export async function uploadToOss(
   settings?: OssSettings,
   pathPrefix = "",
   objectName?: string,
+  options: UploadOptions = {},
 ) {
   if (!canUploadToOss(settings) || !settings) {
     throw new Error("Aliyun OSS is not configured.");
@@ -64,6 +92,7 @@ export async function uploadToOss(
   const prefix = cleanPart(pathPrefix);
   const objectKey = [directory, prefix, objectName || randomName(file)].filter(Boolean).join("/");
   const contentType = file.type || "application/octet-stream";
+  const cacheControl = options.cacheControl || cacheControlForUpload(contentType, objectName);
   const date = new Date().toUTCString();
   const ossHeaders = `x-oss-date:${date}\nx-oss-object-acl:public-read\n`;
   const resource = `/${bucket}/${objectKey}`;
@@ -75,6 +104,7 @@ export async function uploadToOss(
     method: "PUT",
     headers: {
       Authorization: `OSS ${settings.accessKeyId}:${signature}`,
+      "Cache-Control": cacheControl,
       "Content-Type": contentType,
       "x-oss-date": date,
       "x-oss-object-acl": "public-read",

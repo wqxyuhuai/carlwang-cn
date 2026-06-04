@@ -13,6 +13,8 @@ const FETCH_RETRIES = Number(process.env.SYNC_FETCH_RETRIES || 3);
 const NOTION_CONCURRENCY = Number(process.env.SYNC_NOTION_CONCURRENCY || 2);
 const BLOCK_CONCURRENCY = Number(process.env.SYNC_BLOCK_CONCURRENCY || 1);
 const MEDIA_CONCURRENCY = Number(process.env.SYNC_MEDIA_CONCURRENCY || 1);
+const LONG_LIVED_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const CONTENT_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300";
 const PAGE_TIMEOUT_MS = Number(process.env.SYNC_PAGE_TIMEOUT_MS || 45 * 60 * 1000);
 const HEARTBEAT_MS = Number(process.env.SYNC_HEARTBEAT_MS || 30000);
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
@@ -259,11 +261,35 @@ function publicUrlForObjectKey(objectKey) {
   return publicBase ? `${publicBase}/${encodePath(objectKey)}` : url;
 }
 
-function ossRequestHeaders(method, contentType, objectKey) {
+function cacheControlForUpload(contentType, objectKey) {
+  const normalizedType = String(contentType || "").toLowerCase();
+  const normalizedKey = String(objectKey || "").toLowerCase();
+
+  if (normalizedKey.endsWith(".json") || normalizedType.includes("application/json")) {
+    return CONTENT_CACHE_CONTROL;
+  }
+
+  if (
+    normalizedType.startsWith("image/") ||
+    normalizedType.startsWith("video/") ||
+    normalizedType.startsWith("audio/") ||
+    normalizedType.startsWith("font/")
+  ) {
+    return LONG_LIVED_CACHE_CONTROL;
+  }
+
+  return "public, max-age=86400";
+}
+
+function ossRequestHeaders(method, contentType, objectKey, options = {}) {
   const bucket = required("ALIYUN_OSS_BUCKET");
   const accessKeyId = required("ALIYUN_OSS_ACCESS_KEY_ID");
   const accessKeySecret = required("ALIYUN_OSS_ACCESS_KEY_SECRET");
   const date = new Date().toUTCString();
+  const cacheControl =
+    method === "PUT"
+      ? options.cacheControl || cacheControlForUpload(contentType, objectKey)
+      : "";
   const resource = `/${bucket}/${objectKey}`;
   const ossHeaders =
     method === "PUT"
@@ -276,6 +302,7 @@ function ossRequestHeaders(method, contentType, objectKey) {
     .digest("base64");
   return {
     Authorization: `OSS ${accessKeyId}:${signature}`,
+    ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
     ...(contentType ? { "Content-Type": contentType } : {}),
     ...(method === "PUT" ? { "x-oss-object-acl": "public-read" } : {}),
     "x-oss-date": date,
@@ -519,12 +546,12 @@ async function findExistingMediaObject(prefix, label, suffix, extCandidates) {
   return "";
 }
 
-async function uploadBuffer(buffer, contentType, objectKey) {
+async function uploadBuffer(buffer, contentType, objectKey, options = {}) {
   const url = ossUrlForObjectKey(objectKey);
   console.log(`  PUT ${objectKey} (${formatBytes(buffer.length) || `${buffer.length} bytes`})`);
   const response = await fetchWithRetry(url, {
     method: "PUT",
-    headers: ossRequestHeaders("PUT", contentType, objectKey),
+    headers: ossRequestHeaders("PUT", contentType, objectKey, options),
     body: buffer,
   });
   if (!response.ok) {
@@ -587,7 +614,7 @@ async function uploadJson(content) {
 
 async function fetchPublishedContent() {
   const url = process.env.VITE_CONTENT_URL || DEFAULT_CONTENT_URL;
-  const response = await fetchWithRetry(`${url}?t=${Date.now()}`);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(`Could not fetch published content ${response.status}`);
   }
