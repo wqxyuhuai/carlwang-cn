@@ -26,6 +26,7 @@ import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
 import type { LabItem, Project, RichBlock } from "../data";
 import { reorderIds, sortByDisplayOrder } from "../contentOrdering";
+import { APP_VERSION } from "../version";
 import { canUploadToOss, uploadToOss } from "../ossUpload";
 import { ProjectBlockEditor } from "./editor/ProjectBlockEditor";
 
@@ -138,6 +139,10 @@ export function StudioUnlocked({
       {tab === "links" && <LinksTab toast={showToast} />}
       {tab === "qr" && <QRTab toast={showToast} />}
       {tab === "settings" && <SettingsTab toast={showToast} />}
+
+      <div className="mt-24 text-xs tracking-[0.18em] text-[var(--muted-2)] max-md:mt-14">
+        VERSION {APP_VERSION}
+      </div>
 
       {toast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[color:var(--surface-2)] border border-[color:var(--line)] text-[var(--fg)] px-5 py-3 rounded-full shadow-2xl text-sm flex items-center gap-2 z-50">
