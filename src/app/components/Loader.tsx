@@ -53,7 +53,7 @@ export function Loader({ onDone }: { onDone: () => void }) {
           </span>
         ))}
       </div>
-      <div className="absolute bottom-10 left-0 right-0 flex items-center justify-center gap-2 text-[var(--muted-2)] text-xs tracking-[0.3em] uppercase">
+      <div className="absolute bottom-10 left-0 right-0 flex items-center justify-center gap-2 text-[var(--muted-2)] text-xs tracking-normal uppercase">
         Carl Wang Studio
       </div>
     </div>

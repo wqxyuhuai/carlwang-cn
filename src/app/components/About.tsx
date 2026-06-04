@@ -63,7 +63,7 @@ export function About() {
         <div className="lg:col-span-4">
           <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6">
             <div className="mb-5 h-20 w-20 rounded-full bg-[var(--accent)]" />
-            <div className="text-sm uppercase tracking-[0.18em] text-[var(--muted-2)]">
+            <div className="text-sm uppercase tracking-normal text-[var(--muted-2)]">
               Focus
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -196,7 +196,7 @@ export function About() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
+                  <label className="mb-2 block text-xs uppercase tracking-normal text-[var(--muted-2)]">
                     Message
                   </label>
                   <textarea
@@ -239,7 +239,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-[var(--muted-2)]">
+      <label className="mb-2 block text-xs uppercase tracking-normal text-[var(--muted-2)]">
         {label}
       </label>
       <input

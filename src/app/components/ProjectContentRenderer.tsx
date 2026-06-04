@@ -163,7 +163,7 @@ function ProjectBlockView({
     return (
       <pre className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-6 overflow-x-auto rounded-xl border border-[color:var(--line)] bg-[#111] px-5 py-4 text-sm leading-7 text-white`}>
         {block.language && (
-          <div className="mb-3 text-xs uppercase tracking-[0.16em] text-white/45">
+          <div className="mb-3 text-xs uppercase tracking-normal text-white/45">
             {block.language}
           </div>
         )}

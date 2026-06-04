@@ -30,7 +30,7 @@ export function StudioLocked({
           <div className="w-12 h-12 rounded-full bg-[color:var(--hover)] border border-[color:var(--line)] grid place-items-center mb-6">
             <Lock className="w-5 h-5 text-[var(--accent)]" />
           </div>
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2">
+          <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2">
             Private
           </div>
           <h2

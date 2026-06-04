@@ -68,7 +68,7 @@ export function ProjectDetail({
       <section className="content-shell py-12 flex items-center justify-between gap-4 max-md:grid max-md:grid-cols-2 max-md:py-8">
         {allWork.length > 1 ? (
         <button onClick={() => openProject(prev.id)} className="group min-w-0 text-left">
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1 flex items-center gap-2">
+          <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-1 flex items-center gap-2">
             <ArrowLeft className="w-3.5 h-3.5" /> Previous
           </div>
           <div className="line-clamp-2 text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors max-md:text-base">
@@ -84,7 +84,7 @@ export function ProjectDetail({
         </button>
         {allWork.length > 1 ? (
         <button onClick={() => openProject(next.id)} className="group min-w-0 text-right">
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1 flex items-center justify-end gap-2">
+          <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-1 flex items-center justify-end gap-2">
             Next <ArrowRight className="w-3.5 h-3.5" />
           </div>
           <div className="line-clamp-2 text-[var(--fg)] text-xl group-hover:text-[var(--accent)] transition-colors max-md:text-base">

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   Plus,
@@ -70,7 +70,7 @@ export function StudioUnlocked({
     <div className="content-shell py-12 relative max-md:py-8">
       <div className="flex items-end justify-between gap-6 mb-10 max-md:flex-col max-md:items-start max-md:mb-7">
         <div>
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-3">
+          <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-3">
             Studio - Owner Mode
           </div>
           <h1
@@ -140,7 +140,7 @@ export function StudioUnlocked({
       {tab === "qr" && <QRTab toast={showToast} />}
       {tab === "settings" && <SettingsTab toast={showToast} />}
 
-      <div className="mt-24 text-xs tracking-[0.18em] text-[var(--muted-2)] max-md:mt-14">
+      <div className="mt-24 text-xs tracking-normal text-[var(--muted-2)] max-md:mt-14">
         VERSION {APP_VERSION}
       </div>
 
@@ -188,7 +188,7 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
             onClick={() => setTab(s.to)}
             className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 text-left transition-colors hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--hover)] max-md:p-4"
           >
-            <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+            <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase">
               {s.k}
             </div>
             <div
@@ -202,7 +202,7 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
       </div>
 
       <div className="hidden">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-4">
           Quick Actions
         </div>
         <div className="grid grid-cols-5 gap-3">
@@ -220,7 +220,7 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
       </div>
 
       <div>
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-4">
           Contact Messages
         </div>
         <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] divide-y divide-[color:var(--line-soft)]">
@@ -248,7 +248,7 @@ function Overview({ setTab }: { setTab: (t: Tab) => void }) {
                 </div>
                 <div className="text-[var(--muted)] text-sm mt-1">
                   {message.name}
-                  {message.message ? ` 路 ${message.message}` : ""}
+                  {message.message ? ` · ${message.message}` : ""}
                 </div>
               </div>
             ))}
@@ -303,7 +303,7 @@ function ProjectsTab({ toast }: { toast: (m: string) => void }) {
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] overflow-x-auto">
         <table className="w-full min-w-[920px] text-sm">
-          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
+          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-normal uppercase">
             <tr>
               <th className="text-left px-4 py-3">Title</th>
               <th className="text-left px-4 py-3">Category</th>
@@ -558,7 +558,7 @@ function LabTab({ toast }: { toast: (m: string) => void }) {
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] overflow-x-auto">
         <table className="w-full min-w-[920px] text-sm">
-          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
+          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-normal uppercase">
             <tr>
               <th className="text-left px-4 py-3">Title</th>
               <th className="text-left px-4 py-3">Type</th>
@@ -804,7 +804,7 @@ function ToolboxTab({ toast }: { toast: (m: string) => void }) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-1">
+            <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-1">
               Tool 01
             </div>
             <div className="text-[var(--fg)] text-2xl tracking-tight">File Vault</div>
@@ -818,7 +818,7 @@ function ToolboxTab({ toast }: { toast: (m: string) => void }) {
         </div>
         <div className="rounded-2xl border border-[color:var(--line)] overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
+            <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-normal uppercase">
               <tr>
                 <th className="text-left px-4 py-3">File</th>
                 <th className="text-left px-4 py-3">Type</th>
@@ -886,7 +886,7 @@ function ToolboxTab({ toast }: { toast: (m: string) => void }) {
 
       {/* Quick Notes */}
       <div>
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2">
           Tool 02
         </div>
         <div className="text-[var(--fg)] text-2xl tracking-tight mb-5">
@@ -1015,7 +1015,7 @@ function LinksTab({ toast }: { toast: (m: string) => void }) {
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-[0.18em] uppercase">
+          <thead className="bg-[color:var(--surface-2)] text-[var(--muted-2)] text-xs tracking-normal uppercase">
             <tr>
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Slug</th>
@@ -1188,7 +1188,7 @@ function QRTab({ toast }: { toast: (m: string) => void }) {
   return (
     <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase">
           Source
         </div>
         <Field label="URL" value={url} onChange={setUrl} />
@@ -1210,7 +1210,7 @@ function QRTab({ toast }: { toast: (m: string) => void }) {
         </button>
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-4">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-4">
           Preview
         </div>
         <QRPreview
@@ -1302,7 +1302,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
       className="grid grid-cols-2 gap-6 max-lg:grid-cols-1"
     >
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase">
           Identity
         </div>
         <Field label="Display name" value={s.name} onChange={(v) => setS({ ...s, name: v })} />
@@ -1311,7 +1311,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
         <Textarea label="Short bio" value={s.bio} onChange={(v) => setS({ ...s, bio: v })} />
       </div>
       <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4">
-        <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+        <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase">
           Contact & Profiles
         </div>
         <Field label="Email" value={s.email} onChange={(v) => setS({ ...s, email: v })} />
@@ -1326,7 +1326,7 @@ function SettingsTab({ toast }: { toast: (m: string) => void }) {
       </div>
       <div className="col-span-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 space-y-4 max-lg:col-span-1 max-md:p-4">
         <div className="flex items-center justify-between">
-          <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase">
+          <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase">
             Aliyun OSS Storage
           </div>
           <Toggle
@@ -2184,7 +2184,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
+      <label className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2 block">
         {label}
       </label>
       <input
@@ -2209,7 +2209,7 @@ function Textarea({
 }) {
   return (
     <div>
-      <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
+      <label className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2 block">
         {label}
       </label>
       <textarea
@@ -2235,7 +2235,7 @@ function Select({
 }) {
   return (
     <div>
-      <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
+      <label className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2 block">
         {label}
       </label>
       <select
@@ -2336,7 +2336,7 @@ export function UploadBox({
   return (
     <div>
       {label && (
-        <label className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-2 block">
+        <label className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2 block">
           {label}
         </label>
       )}

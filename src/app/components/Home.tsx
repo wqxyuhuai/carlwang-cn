@@ -143,7 +143,7 @@ export function Home({
           </div>
           <div className="col-span-5 reveal-up max-md:col-span-1">
             <div className="rounded-2xl border border-[color:var(--line)] p-8 bg-[color:var(--surface)] h-full">
-              <div className="text-[var(--muted-2)] text-xs tracking-[0.2em] uppercase mb-6">
+              <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-6">
                 Focus
               </div>
               <div className="space-y-4">
