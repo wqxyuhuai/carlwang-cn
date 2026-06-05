@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
 import { Home } from "./components/Home";
@@ -11,7 +11,10 @@ import { StudioLocked } from "./components/StudioLocked";
 import { StudioUnlocked } from "./components/StudioUnlocked";
 import { Loader } from "./components/Loader";
 import { CopyrightProtection } from "./components/CopyrightProtection";
+import { GlassDistortionFilter } from "./components/GlassDistortionFilter";
 import { useContent } from "./contentStore";
+import { labCategories, workCategories } from "./data";
+import { sortByDisplayOrder } from "./contentOrdering";
 
 export type Route =
   | "home"
@@ -37,6 +40,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string>("wattdesk");
   const [labId, setLabId] = useState<string>("gh-calendar");
+  const [workFilter, setWorkFilter] = useState("All");
+  const [labFilter, setLabFilter] = useState("All");
   const [studioUnlocked, setStudioUnlocked] = useState(false);
   const todayKey = getTodayKey();
   const [loading, setLoading] = useState(() => {
@@ -62,6 +67,73 @@ export default function App() {
     content.projects.find((project) => (project.slug || project.id) === slug || project.id === slug);
   const findLabBySlug = (slug: string) =>
     content.labItems.find((item) => (item.slug || item.id) === slug || item.id === slug);
+  const publicWork = useMemo(
+    () =>
+      sortByDisplayOrder(
+        content.projects.filter((project) => project.status === "Published"),
+      ),
+    [content.projects],
+  );
+  const publicLabItems = useMemo(
+    () => sortByDisplayOrder(content.labItems.filter((item) => !item.hidden)),
+    [content.labItems],
+  );
+  const workFilters = useMemo(
+    () => [
+      "All",
+      ...workCategories
+        .filter((category) => category !== "All")
+        .filter((category) =>
+          publicWork.some((project) => project.category === category),
+        ),
+    ],
+    [publicWork],
+  );
+  const labFilters = useMemo(
+    () => [
+      "All",
+      ...labCategories
+        .filter((category) => category !== "All")
+        .filter((category) =>
+          publicLabItems.some((item) => item.type === category),
+        ),
+    ],
+    [publicLabItems],
+  );
+  const visibleWork = useMemo(
+    () =>
+      workFilter === "All"
+        ? publicWork
+        : publicWork.filter((project) => project.category === workFilter),
+    [publicWork, workFilter],
+  );
+  const visibleLabItems = useMemo(
+    () =>
+      labFilter === "All"
+        ? publicLabItems
+        : publicLabItems.filter((item) => item.type === labFilter),
+    [publicLabItems, labFilter],
+  );
+  const secondaryNav =
+    route === "work"
+      ? {
+          label: "Work filters",
+          tabs: workFilters,
+          active: workFilter,
+          count: visibleWork.length,
+          countLabel: `project${visibleWork.length === 1 ? "" : "s"}`,
+          onSelect: setWorkFilter,
+        }
+      : route === "lab"
+        ? {
+            label: "Lab filters",
+            tabs: labFilters,
+            active: labFilter,
+            count: visibleLabItems.length,
+            countLabel: `note${visibleLabItems.length === 1 ? "" : "s"}`,
+            onSelect: setLabFilter,
+          }
+        : null;
   const projectPath = (id: string) => {
     const project = content.projects.find((entry) => entry.id === id);
     return `/work/${project?.slug || project?.id || id}`;
@@ -149,6 +221,7 @@ export default function App() {
     } catch {}
     // Apply theme to document root so body can inherit CSS variables
     document.documentElement.className = theme === "dark" ? "theme-dark" : "theme-light";
+    document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   useEffect(() => {
@@ -183,6 +256,14 @@ export default function App() {
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [route, loading]);
+
+  useEffect(() => {
+    if (!workFilters.includes(workFilter)) setWorkFilter("All");
+  }, [workFilter, workFilters]);
+
+  useEffect(() => {
+    if (!labFilters.includes(labFilter)) setLabFilter("All");
+  }, [labFilter, labFilters]);
 
   const go = (r: Route) => {
     const nextRoute = r === "studio-locked" && studioUnlocked ? "studio-unlocked" : r;
@@ -234,13 +315,16 @@ export default function App() {
           studioUnlocked={studioUnlocked}
           theme={theme}
           toggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+          secondary={secondaryNav}
         />
         <main
           ref={mainRef}
           key={route /* re-trigger reveal animation per route */}
         >
           {route === "home" && <Home go={go} openProject={openProject} openLab={openLab} />}
-          {route === "work" && <Work openProject={openProject} />}
+          {route === "work" && (
+            <Work projects={visibleWork} openProject={openProject} />
+          )}
           {route === "project" && (
             <ProjectDetail
               id={projectId}
@@ -248,7 +332,9 @@ export default function App() {
               openProject={openProject}
             />
           )}
-          {route === "lab" && <Lab openLab={openLab} />}
+          {route === "lab" && (
+            <Lab items={visibleLabItems} openLab={openLab} />
+          )}
           {route === "lab-detail" && <LabDetail id={labId} go={go} />}
           {route === "about" && <About />}
           {route === "studio-locked" && (
@@ -271,84 +357,5 @@ export default function App() {
         {!route.startsWith("studio") && <Footer />}
       </div>
     </div>
-  );
-}
-
-function GlassDistortionFilter() {
-  return (
-    <svg className="glass-filter-defs" aria-hidden="true">
-      <filter
-        id="glass-distortion"
-        x="-50%"
-        y="-50%"
-        width="200%"
-        height="200%"
-        filterUnits="objectBoundingBox"
-        colorInterpolationFilters="sRGB"
-      >
-        <feTurbulence
-          type="fractalNoise"
-          baseFrequency="0.01 0.01"
-          numOctaves="1"
-          seed="5"
-          result="turbulence"
-        />
-        <feGaussianBlur in="turbulence" stdDeviation="5" result="softMap" />
-        <feSpecularLighting
-          in="softMap"
-          surfaceScale="5"
-          specularConstant="1"
-          specularExponent="100"
-          lightingColor="white"
-          result="specLight"
-        >
-          <fePointLight x="-200" y="-200" z="300" />
-        </feSpecularLighting>
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="softMap"
-          scale="112"
-          xChannelSelector="R"
-          yChannelSelector="G"
-          result="displacedRough"
-        />
-        <feColorMatrix
-          in="displacedRough"
-          type="matrix"
-          values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"
-          result="displacedR"
-        />
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="softMap"
-          scale="104"
-          xChannelSelector="R"
-          yChannelSelector="G"
-          result="displacedMid"
-        />
-        <feColorMatrix
-          in="displacedMid"
-          type="matrix"
-          values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0"
-          result="displacedG"
-        />
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="softMap"
-          scale="96"
-          xChannelSelector="R"
-          yChannelSelector="G"
-          result="displacedSoft"
-        />
-        <feColorMatrix
-          in="displacedSoft"
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0"
-          result="displacedB"
-        />
-        <feBlend in="displacedR" in2="displacedG" mode="screen" result="blend1" />
-        <feBlend in="blend1" in2="displacedB" mode="screen" />
-      </filter>
-    </svg>
   );
 }
