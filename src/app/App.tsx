@@ -271,7 +271,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, [content.projects, content.labItems, studioUnlocked]);
 
-  // scroll-triggered blur reveal — observes any .reveal-up element in current page
+  // scroll-triggered blur reveal observes any .reveal-up element in current page
   useEffect(() => {
     if (loading) return;
     const root = mainRef.current;
@@ -343,7 +343,6 @@ export default function App() {
       )}
       <CopyrightProtection disabled={route.startsWith("studio")} />
       <div ref={glowRef} className="cursor-glow" />
-<<<<<<< HEAD
       <Nav
         route={route}
         go={go}
@@ -362,17 +361,6 @@ export default function App() {
         secondary={secondaryNav}
       />
       <div className="relative z-10 flex min-h-screen flex-col">
-=======
-      <div className="relative z-10">
-        <Nav
-          route={route}
-          go={go}
-          studioUnlocked={studioUnlocked}
-          theme={theme}
-          toggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
-          secondary={secondaryNav}
-        />
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
         <main
           ref={mainRef}
           key={route /* re-trigger reveal animation per route */}

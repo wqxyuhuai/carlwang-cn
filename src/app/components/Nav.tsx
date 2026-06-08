@@ -1,12 +1,8 @@
-<<<<<<< HEAD
 import { useEffect, useRef, useState } from "react";
 import ArrowOutwardRounded from "@mui/icons-material/ArrowOutwardRounded";
 import DarkModeRounded from "@mui/icons-material/DarkModeRounded";
 import LockRounded from "@mui/icons-material/LockRounded";
 import WbSunnyRounded from "@mui/icons-material/WbSunnyRounded";
-=======
-import { Lock, Sun, Moon, ArrowUpRight } from "lucide-react";
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
 import type { Route } from "../App";
 
 export type SecondaryNavConfig = {
@@ -39,7 +35,6 @@ export function Nav({
     { label: "Work", route: "work" },
     { label: "Lab", route: "lab" },
   ];
-<<<<<<< HEAD
 
   useEffect(() => {
     let raf = 0;
@@ -101,12 +96,6 @@ export function Nav({
   return (
     <>
       <header ref={headerRef} className={`cw-glass-header ${navOnDark ? "is-on-dark" : ""}`}>
-=======
-
-  return (
-    <>
-      <header className="cw-glass-header">
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
         <nav className="cw-glass-wrapper" aria-label="Main navigation">
           <span className="cw-glass-effect" aria-hidden="true" />
           <div className="cw-glass-content">
@@ -144,11 +133,7 @@ export function Nav({
                 }`}
               >
                 Studio
-<<<<<<< HEAD
                 {!studioUnlocked && <LockRounded className="cw-nav-lock-icon" />}
-=======
-                {!studioUnlocked && <Lock className="cw-nav-lock-icon" />}
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
               </button>
             </div>
 
@@ -160,15 +145,9 @@ export function Nav({
                 className="cw-theme-toggle"
               >
                 {theme === "dark" ? (
-<<<<<<< HEAD
                   <WbSunnyRounded className="w-4 h-4" />
                 ) : (
                   <DarkModeRounded className="w-4 h-4" />
-=======
-                  <Sun className="w-4 h-4" />
-                ) : (
-                  <Moon className="w-4 h-4" />
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
                 )}
               </button>
               <button
@@ -176,11 +155,7 @@ export function Nav({
                 onClick={() => go("about")}
                 className="cw-nav-action"
               >
-<<<<<<< HEAD
                 Contact <ArrowOutwardRounded className="w-3.5 h-3.5" />
-=======
-                Contact <ArrowUpRight className="w-3.5 h-3.5" />
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
               </button>
             </div>
           </div>

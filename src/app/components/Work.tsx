@@ -11,11 +11,7 @@ export function Work({
   return (
     <div className="cw-page cw-page-with-secondary">
       <section className="content-shell py-9 max-md:py-7">
-<<<<<<< HEAD
         <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-4 max-md:gap-y-7">
-=======
-        <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 max-md:gap-y-7">
->>>>>>> 15346dce940b66cc4a2ad80056f9c8b02426d673
           {projects.map((p) => (
             <ContentCard
               key={p.id}
