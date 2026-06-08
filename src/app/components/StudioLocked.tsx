@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Lock, KeyRound } from "lucide-react";
+import KeyRounded from "@mui/icons-material/KeyRounded";
+import LockRounded from "@mui/icons-material/LockRounded";
 import type { Route } from "../App";
 
 const STUDIO_PASSWORD_SHA256 =
@@ -24,11 +25,11 @@ export function StudioLocked({
   const [error, setError] = useState("");
 
   return (
-    <div className="content-shell min-h-[calc(100vh-64px)] grid place-items-center py-24 relative overflow-hidden max-md:py-10">
-      <div className="w-full max-w-md">
+    <div className="content-shell min-h-[calc(100vh-64px)] grid place-items-center pt-40 pb-24 relative overflow-hidden max-md:pt-28 max-md:pb-10">
+      <div className="w-full max-w-md min-w-0 max-md:max-w-full">
         <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-2)] backdrop-blur p-10 max-md:p-6">
           <div className="w-12 h-12 rounded-full bg-[color:var(--hover)] border border-[color:var(--line)] grid place-items-center mb-6">
-            <Lock className="w-5 h-5 text-[var(--accent)]" />
+            <LockRounded className="w-5 h-5 text-[var(--accent)]" />
           </div>
           <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-2">
             Private
@@ -67,7 +68,7 @@ export function StudioLocked({
                   : "border-[color:var(--line)] focus-within:border-[color:var(--accent)]/40"
               }`}
             >
-              <KeyRound className="w-4 h-4 text-[var(--muted-2)]" />
+              <KeyRounded className="w-4 h-4 text-[var(--muted-2)]" />
               <input
                 type="password"
                 value={pw}
@@ -76,7 +77,7 @@ export function StudioLocked({
                   setError("");
                 }}
                 placeholder="Enter password"
-                className="bg-transparent flex-1 outline-none text-[var(--fg)] placeholder-[color:var(--muted-3)]"
+                className="min-w-0 bg-transparent flex-1 outline-none text-[var(--fg)] placeholder-[color:var(--muted-3)]"
                 autoFocus
               />
             </div>

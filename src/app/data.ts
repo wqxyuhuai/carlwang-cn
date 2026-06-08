@@ -134,13 +134,13 @@ export const capabilities = [
 export const socials = [
   { name: "Email", href: "mailto:wqxyuhuai@163.com", icon: "Mail" },
   { name: "GitHub", href: "https://github.com/wqxyuhuai", icon: "Github" },
-  { name: "Behance", href: "https://www.behance.net/carl_wang", icon: "Palette" },
+  { name: "Behance", href: "https://www.behance.net/carl_wang", icon: "Behance" },
   {
     name: "Xiaohongshu",
     href: "https://www.xiaohongshu.com/user/profile/63d27072000000002702a47e",
-    icon: "BookOpen",
+    icon: "Xiaohongshu",
   },
-  { name: "ZCOOL", href: "https://www.zcool.com.cn/u/16294196", icon: "Brush" },
+  { name: "ZCOOL", href: "https://www.zcool.com.cn/u/16294196", icon: "ZCOOL" },
   {
     name: "LinkedIn",
     href: "https://www.linkedin.cn/incareer/in/carl-wang-840656167/",

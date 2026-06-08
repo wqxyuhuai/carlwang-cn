@@ -1,4 +1,6 @@
-import { ArrowLeft, Github, ExternalLink } from "lucide-react";
+import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import GitHub from "@mui/icons-material/GitHub";
+import OpenInNewRounded from "@mui/icons-material/OpenInNewRounded";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
 import { sortByDisplayOrder } from "../contentOrdering";
@@ -20,16 +22,16 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
 
   return (
     <div>
-      <section className="content-shell pt-10 max-md:pt-6">
+      <section className="content-shell pt-36 max-md:pt-28">
         <button
           onClick={() => go("lab")}
           className="text-[var(--muted)] hover:text-[var(--fg)] text-sm flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Lab
+          <ArrowBackRounded className="w-4 h-4" /> Lab
         </button>
       </section>
 
-      <section className="content-shell pt-14 pb-12 text-center max-md:pt-9 max-md:pb-7">
+      <section className="content-shell pt-12 pb-12 text-center max-md:pt-8 max-md:pb-7">
         <h1 className="text-[var(--fg)] text-5xl font-semibold tracking-tight leading-tight max-md:text-3xl">
           {item.title}
         </h1>
@@ -39,7 +41,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
               href={item.demo}
               className="h-12 px-6 rounded-full bg-[var(--fg)] text-[var(--app-bg)] flex items-center justify-center gap-2 hover:opacity-90"
             >
-              <ExternalLink className="w-4 h-4" /> Open Demo
+              <OpenInNewRounded className="w-4 h-4" /> Open Demo
             </a>
           )}
           {item.github && (
@@ -49,7 +51,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
               rel="noreferrer"
               className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center justify-center gap-2 hover:bg-[color:var(--hover)]"
             >
-              <Github className="w-4 h-4" /> View GitHub
+              <GitHub className="w-4 h-4" /> View GitHub
             </a>
           )}
         </div>

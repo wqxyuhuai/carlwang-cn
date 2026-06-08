@@ -1,24 +1,8 @@
 import { useState } from "react";
-import {
-  BookOpen,
-  Brush,
-  CheckCircle2,
-  Github,
-  Linkedin,
-  Mail,
-  Palette,
-  Send,
-} from "lucide-react";
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import SendRounded from "@mui/icons-material/SendRounded";
 import { useContent } from "../contentStore";
-
-const iconMap: Record<string, any> = {
-  Mail,
-  Github,
-  Palette,
-  BookOpen,
-  Brush,
-  Linkedin,
-};
+import { SocialIcon } from "./SocialIcon";
 
 const focus = [
   "Product Design",
@@ -41,7 +25,7 @@ export function About() {
 
   return (
     <div>
-      <section className="content-shell grid grid-cols-1 gap-10 pt-20 pb-16 lg:grid-cols-12 max-md:pt-10 max-md:pb-10">
+      <section className="content-shell grid grid-cols-1 gap-10 pt-40 pb-16 lg:grid-cols-12 max-md:pt-28 max-md:pb-10">
         <div className="lg:col-span-8">
           <div className="mb-5 inline-flex rounded-full border border-[color:var(--line)] px-4 py-2 text-sm text-[var(--muted)]">
             Wuxi / Remote
@@ -113,7 +97,6 @@ export function About() {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {socials.map((s) => {
-            const Icon = iconMap[s.icon as string];
             return (
               <a
                 key={s.name}
@@ -123,9 +106,7 @@ export function About() {
                 className="group flex items-center justify-between rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] px-6 py-5 transition-colors hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--hover)]"
               >
                 <div className="flex items-center gap-2">
-                  {Icon && (
-                    <Icon className="h-4 w-4 text-[var(--muted-2)] transition-colors group-hover:text-[var(--accent)]" />
-                  )}
+                  <SocialIcon name={s.icon} className="social-icon h-4 w-4" />
                   <span className="text-[var(--fg)]">{s.name}</span>
                 </div>
                 <span className="text-[var(--muted-2)]">-&gt;</span>
@@ -151,7 +132,7 @@ export function About() {
           <div className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-8 lg:col-span-7 max-md:p-5">
             {sent ? (
               <div className="py-16 text-center">
-                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-[var(--accent)]" />
+                <CheckCircleRounded className="mx-auto mb-4 h-12 w-12 text-[var(--accent)]" />
                 <div className="mb-2 text-2xl tracking-tight text-[var(--fg)]">
                   Message sent
                 </div>
@@ -214,7 +195,7 @@ export function About() {
                     type="submit"
                     className="flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 text-[var(--app-bg)] hover:bg-[var(--accent)] max-md:w-full"
                   >
-                    <Send className="h-4 w-4" /> Send Message
+                    <SendRounded className="h-4 w-4" /> Send Message
                   </button>
                 </div>
               </form>

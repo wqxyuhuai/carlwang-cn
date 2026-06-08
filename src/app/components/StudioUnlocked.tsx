@@ -1,27 +1,25 @@
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import {
-  Plus,
-  Edit3,
-  Trash2,
-  EyeOff,
-  Eye,
-  Star,
-  Upload,
-  UploadCloud,
-  Link2,
-  QrCode,
-  Copy,
-  Check,
-  Save,
-  Pin,
-  FileText,
-  Lock,
-  GripVertical,
-  Undo2,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import AddRounded from "@mui/icons-material/AddRounded";
+import ArrowDownwardRounded from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRounded from "@mui/icons-material/ArrowUpwardRounded";
+import CheckRounded from "@mui/icons-material/CheckRounded";
+import CloudUploadRounded from "@mui/icons-material/CloudUploadRounded";
+import ContentCopyRounded from "@mui/icons-material/ContentCopyRounded";
+import DeleteRounded from "@mui/icons-material/DeleteRounded";
+import DescriptionRounded from "@mui/icons-material/DescriptionRounded";
+import DragIndicatorRounded from "@mui/icons-material/DragIndicatorRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
+import LinkRounded from "@mui/icons-material/LinkRounded";
+import LockRounded from "@mui/icons-material/LockRounded";
+import PushPinRounded from "@mui/icons-material/PushPinRounded";
+import QrCode2Rounded from "@mui/icons-material/QrCode2Rounded";
+import SaveRounded from "@mui/icons-material/SaveRounded";
+import StarRounded from "@mui/icons-material/StarRounded";
+import UndoRounded from "@mui/icons-material/UndoRounded";
+import UploadRounded from "@mui/icons-material/UploadRounded";
+import VisibilityOffRounded from "@mui/icons-material/VisibilityOffRounded";
+import VisibilityRounded from "@mui/icons-material/VisibilityRounded";
 import type { Route } from "../App";
 import { useContent, type ManagedLink, type SiteSettings } from "../contentStore";
 import type { LabItem, Project, RichBlock } from "../data";
@@ -29,6 +27,27 @@ import { reorderIds, sortByDisplayOrder } from "../contentOrdering";
 import { APP_VERSION } from "../version";
 import { canUploadToOss, uploadToOss } from "../ossUpload";
 import { ProjectBlockEditor } from "./editor/ProjectBlockEditor";
+
+const Plus = AddRounded;
+const Edit3 = EditRounded;
+const Trash2 = DeleteRounded;
+const EyeOff = VisibilityOffRounded;
+const Eye = VisibilityRounded;
+const Star = StarRounded;
+const Upload = UploadRounded;
+const UploadCloud = CloudUploadRounded;
+const Link2 = LinkRounded;
+const QrCode = QrCode2Rounded;
+const Copy = ContentCopyRounded;
+const Check = CheckRounded;
+const Save = SaveRounded;
+const Pin = PushPinRounded;
+const FileText = DescriptionRounded;
+const Lock = LockRounded;
+const GripVertical = DragIndicatorRounded;
+const Undo2 = UndoRounded;
+const ArrowUp = ArrowUpwardRounded;
+const ArrowDown = ArrowDownwardRounded;
 
 type Tab =
   | "overview"
@@ -67,7 +86,7 @@ export function StudioUnlocked({
   ];
 
   return (
-    <div className="content-shell py-12 relative max-md:py-8">
+    <div className="content-shell relative pt-40 pb-12 max-md:pt-28 max-md:pb-8">
       <div className="flex items-end justify-between gap-6 mb-10 max-md:flex-col max-md:items-start max-md:mb-7">
         <div>
           <div className="text-[var(--muted-2)] text-xs tracking-normal uppercase mb-3">

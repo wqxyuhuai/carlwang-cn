@@ -1,9 +1,27 @@
 import { useEffect, useRef, useState, type CSSProperties, type DragEvent } from "react";
-import { AlignCenter, AlignLeft, AlignRight, GripVertical, Image as ImageIcon, Plus, Trash2, Upload, Video } from "lucide-react";
+import AddRounded from "@mui/icons-material/AddRounded";
+import CloudUploadRounded from "@mui/icons-material/CloudUploadRounded";
+import DeleteRounded from "@mui/icons-material/DeleteRounded";
+import DragIndicatorRounded from "@mui/icons-material/DragIndicatorRounded";
+import FormatAlignCenterRounded from "@mui/icons-material/FormatAlignCenterRounded";
+import FormatAlignLeftRounded from "@mui/icons-material/FormatAlignLeftRounded";
+import FormatAlignRightRounded from "@mui/icons-material/FormatAlignRightRounded";
+import ImageRounded from "@mui/icons-material/ImageRounded";
+import VideoLibraryRounded from "@mui/icons-material/VideoLibraryRounded";
 import type { ProjectBlock } from "../../data";
 import { useContent } from "../../contentStore";
 import { canUploadToOss, uploadToOss } from "../../ossUpload";
 import { ProjectContentRenderer } from "../ProjectContentRenderer";
+
+const AlignCenter = FormatAlignCenterRounded;
+const AlignLeft = FormatAlignLeftRounded;
+const AlignRight = FormatAlignRightRounded;
+const GripVertical = DragIndicatorRounded;
+const ImageIcon = ImageRounded;
+const Plus = AddRounded;
+const Trash2 = DeleteRounded;
+const Upload = CloudUploadRounded;
+const Video = VideoLibraryRounded;
 
 type Command = {
   type: ProjectBlock["type"];

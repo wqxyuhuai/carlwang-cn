@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ExternalLink } from "lucide-react";
+import OpenInNewRounded from "@mui/icons-material/OpenInNewRounded";
 import type { ProjectBlock } from "../data";
 
 export function textToProjectBlocks(value: string): ProjectBlock[] {
@@ -134,7 +134,7 @@ function ProjectBlockView({
         className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5 flex items-center justify-between gap-4 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4 text-[var(--fg)] transition-colors hover:border-[color:var(--accent)]/50`}
       >
         <span className="min-w-0 truncate">{text || href}</span>
-        <ExternalLink className="h-4 w-4 shrink-0 text-[var(--muted-2)]" />
+        <OpenInNewRounded className="h-4 w-4 shrink-0 text-[var(--muted-2)]" />
       </a>
     );
   }
