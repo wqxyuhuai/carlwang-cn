@@ -102,7 +102,7 @@ export function About() {
                 key={s.name}
                 href={s.href}
                 target={s.href.startsWith("mailto:") ? undefined : "_blank"}
-                rel={s.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                rel={s.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                 className="group flex items-center justify-between rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] px-6 py-5 transition-colors hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--hover)]"
               >
                 <div className="flex items-center gap-2">

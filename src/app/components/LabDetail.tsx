@@ -39,6 +39,8 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
           {item.demo && (
             <a
               href={item.demo}
+              target="_blank"
+              rel="noopener noreferrer"
               className="h-12 px-6 rounded-full bg-[var(--fg)] text-[var(--app-bg)] flex items-center justify-center gap-2 hover:opacity-90"
             >
               <OpenInNewRounded className="w-4 h-4" /> Open Demo
@@ -48,7 +50,7 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
             <a
               href={item.github}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="h-12 px-6 rounded-full border border-[color:var(--line-strong)] text-[var(--fg)] flex items-center justify-center gap-2 hover:bg-[color:var(--hover)]"
             >
               <GitHub className="w-4 h-4" /> View GitHub

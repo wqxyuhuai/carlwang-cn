@@ -130,7 +130,7 @@ function ProjectBlockView({
       <a
         href={href}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className={`${blockWidth(block, fullWidth)} ${blockAlign(block, fullWidth)} my-5 flex items-center justify-between gap-4 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4 text-[var(--fg)] transition-colors hover:border-[color:var(--accent)]/50`}
       >
         <span className="min-w-0 truncate">{text || href}</span>

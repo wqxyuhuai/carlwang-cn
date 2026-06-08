@@ -12,6 +12,7 @@ import { StudioUnlocked } from "./components/StudioUnlocked";
 import { Loader } from "./components/Loader";
 import { CopyrightProtection } from "./components/CopyrightProtection";
 import { GlassDistortionFilter } from "./components/GlassDistortionFilter";
+import { BackToTop } from "./components/BackToTop";
 import { useContent } from "./contentStore";
 import { labCategories, workCategories } from "./data";
 import { sortByDisplayOrder } from "./contentOrdering";
@@ -300,6 +301,31 @@ export default function App() {
     if (!labFilters.includes(labFilter)) setLabFilter("All");
   }, [labFilter, labFilters]);
 
+  useEffect(() => {
+    const projectTitle =
+      route === "project"
+        ? content.projects.find((project) => project.id === projectId)?.title
+        : null;
+    const labTitle =
+      route === "lab-detail"
+        ? content.labItems.find((item) => item.id === labId)?.title
+        : null;
+    const pageName =
+      projectTitle ||
+      labTitle ||
+      ({
+        home: "Home",
+        work: "Work",
+        lab: "Lab",
+        about: "About",
+        "studio-locked": "Studio",
+        "studio-unlocked": "Studio",
+      } satisfies Partial<Record<Route, string>>)[route] ||
+      "Home";
+
+    document.title = `Studio - ${pageName} | Carl Wang`;
+  }, [content.labItems, content.projects, labId, projectId, route]);
+
   const go = (r: Route) => {
     const nextRoute = r === "studio-locked" && studioUnlocked ? "studio-unlocked" : r;
     const path = currentPath(nextRoute);
@@ -401,6 +427,7 @@ export default function App() {
         </main>
         {!route.startsWith("studio") && <Footer />}
       </div>
+      <BackToTop routeKey={`${route}:${projectId}:${labId}`} />
     </div>
   );
 }

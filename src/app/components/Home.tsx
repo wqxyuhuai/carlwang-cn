@@ -116,6 +116,8 @@ export function Home({
                   <a
                     key={s.name}
                     href={s.href}
+                    target={s.href.startsWith("mailto:") ? undefined : "_blank"}
+                    rel={s.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                     className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] px-5 py-4 hover:border-[color:var(--accent)]/40 transition-all flex items-center gap-3 group"
                   >
                     <SocialIcon name={s.icon} className="social-icon w-4 h-4" />

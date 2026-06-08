@@ -26,7 +26,7 @@ export function Footer() {
                   <a
                     href={s.href}
                     target={s.href.startsWith("mailto:") ? undefined : "_blank"}
-                    rel={s.href.startsWith("mailto:") ? undefined : "noreferrer"}
+                    rel={s.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                     className="text-[var(--fg-2)] hover:text-[var(--accent)] transition-colors flex items-center gap-2"
                   >
                     <SocialIcon name={s.icon} className="social-icon w-4 h-4" />

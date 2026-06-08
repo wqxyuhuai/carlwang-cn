@@ -55,7 +55,7 @@ export function ProjectDetail({
           <a
             href={project.externalUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="mt-7 h-11 px-5 rounded-full bg-[var(--fg)] text-[var(--app-bg)] inline-flex items-center gap-2"
           >
             Open Project <OpenInNewRounded className="w-4 h-4" />
