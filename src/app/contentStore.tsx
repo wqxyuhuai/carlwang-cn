@@ -195,7 +195,15 @@ function normalizeItemId(item: { id?: string; slug?: string; title?: string }, p
     .slice(0, 80) || Date.now().toString(36)}`;
 }
 
+function yearFromTime(time?: string) {
+  if (!time) return undefined;
+  const value = Date.parse(time.replace(/\//g, "-"));
+  if (!Number.isFinite(value)) return undefined;
+  return new Date(value).getFullYear();
+}
+
 function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
+  const currentYear = new Date().getFullYear();
   const projects = withDefaultSortOrder(
     (value?.projects?.length ? value.projects : defaultContent.projects).map(
       (project) => {
@@ -207,11 +215,11 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
         ...rest,
         id: normalizeItemId(project, "work"),
         slug: project.slug || normalizeItemId(project, "work"),
+        year: project.year ?? yearFromTime(project.time) ?? currentYear,
       };
     },
     ),
   );
-  const currentYear = new Date().getFullYear();
   const lab = withDefaultSortOrder((value?.labItems?.length ? value.labItems : defaultContent.labItems).map((item) => {
     const { description: _description, techStack: _techStack, ...rest } = item as LabItem & {
       description?: string;
@@ -221,7 +229,7 @@ function normalizeContent(value: Partial<SiteContent> | null): SiteContent {
       ...rest,
       id: normalizeItemId(item, "lab"),
       slug: item.slug || normalizeItemId(item, "lab"),
-      year: item.year ?? currentYear,
+      year: item.year ?? yearFromTime(item.time) ?? currentYear,
       hidden: item.hidden ?? false,
       featured: !!item.featured,
     };

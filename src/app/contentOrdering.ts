@@ -1,15 +1,26 @@
 export type OrderedContent = {
   id: string;
   title: string;
+  time?: string;
   year?: number;
   sortOrder?: number;
 };
+
+function timeValue(item: OrderedContent) {
+  if (!item.time) return 0;
+  const value = Date.parse(item.time.replace(/\//g, "-"));
+  return Number.isFinite(value) ? value : 0;
+}
 
 export function sortByDisplayOrder<T extends OrderedContent>(items: T[]) {
   return items.slice().sort((a, b) => {
     const orderA = a.sortOrder ?? Number.POSITIVE_INFINITY;
     const orderB = b.sortOrder ?? Number.POSITIVE_INFINITY;
     if (orderA !== orderB) return orderA - orderB;
+
+    const timeA = timeValue(a);
+    const timeB = timeValue(b);
+    if (timeA !== timeB) return timeB - timeA;
 
     const yearA = a.year ?? 0;
     const yearB = b.year ?? 0;
@@ -24,6 +35,10 @@ export function withDefaultSortOrder<T extends OrderedContent>(items: T[]) {
   items
     .slice()
     .sort((a, b) => {
+      const timeA = timeValue(a);
+      const timeB = timeValue(b);
+      if (timeA !== timeB) return timeB - timeA;
+
       const yearA = a.year ?? 0;
       const yearB = b.year ?? 0;
       if (yearA !== yearB) return yearB - yearA;

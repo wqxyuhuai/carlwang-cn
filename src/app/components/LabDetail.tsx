@@ -4,6 +4,7 @@ import OpenInNewRounded from "@mui/icons-material/OpenInNewRounded";
 import type { Route } from "../App";
 import { useContent } from "../contentStore";
 import { sortByDisplayOrder } from "../contentOrdering";
+import { DetailFloatingBar } from "./DetailFloatingBar";
 import { NotionContentView, textToRichBlocks } from "./NotionContent";
 
 export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
@@ -62,6 +63,8 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
       <section className="content-shell project-detail-shell py-12 max-md:py-6">
         <NotionContentView blocks={blocks} fullWidth />
       </section>
+
+      <DetailFloatingBar item={item} routeKey={`lab:${item.id}`} />
 
       <section className="content-shell py-16 max-md:py-8">
         <button

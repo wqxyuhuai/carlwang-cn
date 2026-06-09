@@ -12,7 +12,6 @@ import { StudioUnlocked } from "./components/StudioUnlocked";
 import { Loader } from "./components/Loader";
 import { CopyrightProtection } from "./components/CopyrightProtection";
 import { GlassDistortionFilter } from "./components/GlassDistortionFilter";
-import { BackToTop } from "./components/BackToTop";
 import { useContent } from "./contentStore";
 import { labCategories, workCategories } from "./data";
 import { sortByDisplayOrder } from "./contentOrdering";
@@ -427,7 +426,6 @@ export default function App() {
         </main>
         {!route.startsWith("studio") && <Footer />}
       </div>
-      <BackToTop routeKey={`${route}:${projectId}:${labId}`} />
     </div>
   );
 }

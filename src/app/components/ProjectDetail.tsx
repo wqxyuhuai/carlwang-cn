@@ -8,6 +8,7 @@ import {
   ProjectContentRenderer,
   textToProjectBlocks,
 } from "./ProjectContentRenderer";
+import { DetailFloatingBar } from "./DetailFloatingBar";
 
 export function ProjectDetail({
   id,
@@ -66,6 +67,8 @@ export function ProjectDetail({
       <section className="content-shell project-detail-shell py-12 max-md:py-6">
         <ProjectContentRenderer blocks={blocks} fullWidth />
       </section>
+
+      <DetailFloatingBar item={project} routeKey={`project:${project.id}`} />
 
       <section className="content-shell py-12 flex items-center justify-between gap-4 max-md:grid max-md:grid-cols-2 max-md:py-8">
         {allWork.length > 1 ? (

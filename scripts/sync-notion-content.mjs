@@ -341,6 +341,24 @@ function propNumber(properties, name) {
   return Number(properties[name]?.number || new Date().getFullYear());
 }
 
+function propOptionalNumber(properties, ...names) {
+  for (const name of names) {
+    const value = properties[name]?.number;
+    if (Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function propDate(properties, name) {
+  return properties[name]?.date?.start || "";
+}
+
+function yearFromDate(value) {
+  if (!value) return undefined;
+  const year = new Date(value).getFullYear();
+  return Number.isFinite(year) ? year : undefined;
+}
+
 function propFiles(properties, name) {
   return properties[name]?.files || [];
 }
@@ -679,6 +697,21 @@ function migratePublishedContent(content) {
 async function buildEntry(page) {
   const title = propTitle(page.properties);
   const type = propSelect(page.properties, "Type");
+  const time = propDate(page.properties, "Time");
+  const year = yearFromDate(time) ?? propNumber(page.properties, "Year");
+  const views = propOptionalNumber(
+    page.properties,
+    "Views",
+    "Read",
+    "Reads",
+    "阅读量",
+  );
+  const likes = propOptionalNumber(
+    page.properties,
+    "Likes",
+    "Appreciates",
+    "点赞量",
+  );
   const idBase = page.id.replace(/-/g, "").slice(0, 24);
   const slug = slugify(title, `notion-${idBase}`);
   const prefix = `${type.toLowerCase()}/${slug}`;
@@ -714,7 +747,10 @@ async function buildEntry(page) {
         slug,
         title,
         type: categories[0] || "Notes",
-        year: propNumber(page.properties, "Year"),
+        year,
+        time: time || undefined,
+        views,
+        likes,
         status: propSelect(page.properties, "Status") || "Idea",
         coverImage,
         github: propUrl(page.properties, "GitHub URL") || undefined,
@@ -740,7 +776,10 @@ async function buildEntry(page) {
       slug,
       title,
       category: categories[0] || "Other",
-      year: propNumber(page.properties, "Year"),
+      year,
+      time: time || undefined,
+      views,
+      likes,
       content: textParts.join("\n\n"),
       richContent,
       coverImage,
