@@ -454,7 +454,7 @@
 .cw-secondary-tabs.is-visible,
 body.show-secondary .cw-secondary-tabs {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
   transform: translateY(0);
   visibility: visible;
 }
@@ -465,6 +465,7 @@ body.show-secondary .cw-secondary-tabs {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  pointer-events: none;
 }
 
 .cw-secondary-panel {
@@ -474,6 +475,7 @@ body.show-secondary .cw-secondary-tabs {
   width: 100%;
   padding-inline: 31px;
   gap: 24px;
+  pointer-events: none;
 }
 
 .cw-secondary-panel.is-current {
@@ -485,6 +487,7 @@ body.show-secondary .cw-secondary-tabs {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  pointer-events: auto;
 }
 
 .cw-secondary-tab {
@@ -560,8 +563,273 @@ body.show-secondary .cw-secondary-tabs {
   white-space: nowrap;
 }
 
+.cw-page-with-secondary,
 .cw-content-after-secondary {
   padding-top: 212px;
+}
+
+.detail-float-dock {
+  position: relative;
+  width: min(var(--content-max), calc(100vw - var(--content-pad) * 2));
+  min-height: 126px;
+  margin: -8px auto 16px;
+  pointer-events: none;
+}
+
+.detail-float {
+  position: fixed;
+  z-index: 19;
+  left: 50%;
+  bottom: max(var(--detail-float-bottom, 104px), env(safe-area-inset-bottom));
+  width: min(var(--content-max), calc(100vw - var(--content-pad) * 2));
+  color: var(--cw-nav-text);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 16px) scale(0.98);
+  transition:
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    color 180ms ease;
+}
+
+.detail-float.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.detail-float.is-docked {
+  position: relative;
+  left: 50%;
+  bottom: auto;
+  width: 100%;
+  transform: translateX(-50%) scale(1);
+}
+
+.cw-glass-wrapper.detail-float-card {
+  width: min(480px, calc(100vw - 96px));
+  height: auto;
+  min-height: 0;
+  margin-inline: auto;
+  border-radius: 20px;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease;
+}
+
+.cw-glass-wrapper.detail-float-card:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.02);
+}
+
+.detail-float-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 95px;
+  padding: 10px;
+  overflow: hidden;
+  color: var(--cw-nav-text);
+  background: var(--cw-nav-glass-bg);
+  border-radius: inherit;
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 22%);
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.detail-float-cover {
+  width: 100px;
+  height: 75px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: rgb(17 17 17 / 10%);
+}
+
+.detail-float-cover-placeholder {
+  background:
+    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 28%), transparent 42%),
+    linear-gradient(135deg, rgb(17 17 17 / 16%), rgb(17 17 17 / 6%));
+}
+
+.detail-float-copy {
+  min-width: 0;
+}
+
+.detail-float-title {
+  overflow: hidden;
+  color: currentColor;
+  font-size: 14px;
+  font-weight: 560;
+  line-height: 22px;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-float-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 22px;
+  letter-spacing: -0.01em;
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+.detail-float-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.detail-float-meta svg {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 16px !important;
+}
+
+.detail-float-like {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 40px;
+  min-width: 150px;
+  padding: 0 20px;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid rgb(255 255 255 / 50%);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 560;
+  line-height: 20px;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 0.5px 0 rgb(255 255 255 / 58%),
+    0 12px 28px rgb(91 96 54 / 12%);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.detail-float-like svg {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 22px !important;
+}
+
+.detail-float-like:hover,
+.detail-float-like:focus-visible {
+  filter: brightness(1.03) saturate(1.04);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.detail-float-like.is-liked {
+  box-shadow:
+    inset 0 0.5px 0 rgb(255 255 255 / 62%),
+    0 0 0 3px color-mix(in srgb, var(--accent), transparent 72%),
+    0 12px 28px rgb(91 96 54 / 14%);
+}
+
+.detail-float-like.is-bursting {
+  animation: detailLikePop 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.detail-float-like.is-bursting svg {
+  animation: detailThumbPop 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.cw-glass-wrapper.detail-float-top {
+  position: absolute;
+  right: -64px;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  color: rgb(47 47 47 / 62%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 52%) inset,
+    0 12px 28px rgb(0 0 0 / 10%);
+  transform: translateY(-50%);
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.detail-float-top-content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: currentColor;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 44%), rgb(255 255 255 / 12%)),
+    rgb(150 150 150 / 24%);
+  border-radius: inherit;
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+}
+
+.detail-float-top svg {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 24px !important;
+}
+
+.cw-glass-wrapper.detail-float-top:hover,
+.cw-glass-wrapper.detail-float-top:focus-visible {
+  transform: translateY(calc(-50% - 2px));
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 62%) inset,
+    0 16px 34px rgb(0 0 0 / 16%);
+  outline: none;
+}
+
+.cw-glass-wrapper.detail-float-top:hover .detail-float-top-content,
+.cw-glass-wrapper.detail-float-top:focus-visible .detail-float-top-content {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 16%)),
+    rgb(138 138 138 / 32%);
+}
+
+.detail-float.is-on-dark {
+  color: rgb(255 255 255 / 92%);
+}
+
+.detail-float.is-on-dark .detail-float-content,
+.detail-float.is-on-dark .detail-float-top-content {
+  color: rgb(255 255 255 / 92%);
+}
+
+.detail-float.is-on-dark .detail-float-meta {
+  opacity: 0.58;
+}
+
+@keyframes detailLikePop {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes detailThumbPop {
+  0% { transform: rotate(0deg) scale(1); }
+  34% { transform: rotate(-9deg) scale(1.22); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -670,7 +938,77 @@ body.show-secondary .cw-secondary-tabs {
     font-size: 13px;
   }
 
+  .cw-page-with-secondary,
   .cw-content-after-secondary {
     padding-top: 220px;
+  }
+
+  .detail-float-dock {
+    width: calc(100vw - 20px);
+    min-height: 100px;
+    margin: -4px auto 8px;
+  }
+
+  .detail-float {
+    width: calc(100vw - 20px);
+    bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  .cw-glass-wrapper.detail-float-card {
+    width: min(100%, calc(100vw - 72px));
+    border-radius: 18px;
+  }
+
+  .detail-float-content {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 72px;
+    padding: 8px;
+  }
+
+  .detail-float-cover {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+  }
+
+  .detail-float-title {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .detail-float-meta {
+    gap: 3px;
+    font-size: 11px;
+    line-height: 16px;
+  }
+
+  .detail-float-meta svg {
+    width: 13px !important;
+    height: 13px !important;
+    font-size: 13px !important;
+  }
+
+  .detail-float-like {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .detail-float-like span {
+    display: none;
+  }
+
+  .detail-float-like svg {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 20px !important;
+  }
+
+  .cw-glass-wrapper.detail-float-top {
+    right: 0;
+    width: 40px;
+    height: 40px;
   }
 }
