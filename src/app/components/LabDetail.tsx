@@ -64,7 +64,11 @@ export function LabDetail({ id, go }: { id: string; go: (r: Route) => void }) {
         <NotionContentView blocks={blocks} fullWidth />
       </section>
 
-      <DetailFloatingBar item={item} routeKey={`lab:${item.id}`} />
+      <DetailFloatingBar
+        item={item}
+        routeKey={`lab:${item.id}`}
+        statsKind="lab"
+      />
 
       <section className="content-shell py-16 max-md:py-8">
         <button

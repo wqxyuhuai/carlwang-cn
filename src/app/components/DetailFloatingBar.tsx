@@ -3,6 +3,13 @@ import KeyboardArrowUpRounded from "@mui/icons-material/KeyboardArrowUpRounded";
 import ThumbUpRounded from "@mui/icons-material/ThumbUpRounded";
 import VisibilityRounded from "@mui/icons-material/VisibilityRounded";
 import type { LabItem, Project } from "../data";
+import {
+  recordDetailView,
+  readLocalDetailStats,
+  setRemoteDetailLike,
+  writeLocalLike,
+  type DetailStatsKind,
+} from "../detailStats";
 
 type DetailItem = Pick<
   Project | LabItem,
@@ -12,10 +19,8 @@ type DetailItem = Pick<
 type DetailFloatingBarProps = {
   item: DetailItem;
   routeKey: string;
+  statsKind: DetailStatsKind;
 };
-
-const VIEW_STORAGE_PREFIX = "cw-detail-views";
-const LIKE_STORAGE_PREFIX = "cw-detail-likes";
 
 function parseDate(value?: string) {
   if (!value) return null;
@@ -92,20 +97,15 @@ function sampleBackground(root: HTMLElement | null) {
   return document.documentElement.dataset.theme === "dark";
 }
 
-export function DetailFloatingBar({ item, routeKey }: DetailFloatingBarProps) {
+export function DetailFloatingBar({ item, routeKey, statsKind }: DetailFloatingBarProps) {
   const dockRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
   const [onDark, setOnDark] = useState(false);
   const [docked, setDocked] = useState(false);
   const [burst, setBurst] = useState(false);
-  const [liked, setLiked] = useState(() => {
-    try {
-      return localStorage.getItem(`cw-appreciated-${item.id}`) === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [remoteStatsReady, setRemoteStatsReady] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(item.likes ?? 0);
   const [views, setViews] = useState(item.views ?? 0);
 
@@ -115,27 +115,36 @@ export function DetailFloatingBar({ item, routeKey }: DetailFloatingBarProps) {
   useEffect(() => {
     const baseViews = item.views ?? 0;
     const baseLikes = item.likes ?? 0;
-    try {
-      const appreciated = localStorage.getItem(`cw-appreciated-${item.id}`) === "true";
-      const storedLikes = Number(localStorage.getItem(`${LIKE_STORAGE_PREFIX}-${item.id}`));
-      const storedViews = Number(localStorage.getItem(`${VIEW_STORAGE_PREFIX}-${item.id}`));
-      const viewedKey = `${VIEW_STORAGE_PREFIX}-seen-${item.id}`;
-      const hasViewed = localStorage.getItem(viewedKey) === "true";
-      const nextViews =
-        Math.max(baseViews, Number.isFinite(storedViews) ? storedViews : baseViews) +
-        (hasViewed ? 0 : 1);
+    let cancelled = false;
 
-      setLiked(appreciated);
-      setLikes(Math.max(baseLikes, Number.isFinite(storedLikes) ? storedLikes : baseLikes));
-      setViews(nextViews);
-      localStorage.setItem(viewedKey, "true");
-      localStorage.setItem(`${VIEW_STORAGE_PREFIX}-${item.id}`, String(nextViews));
+    try {
+      const localStats = readLocalDetailStats(item.id, { baseViews, baseLikes });
+      setLiked(localStats.liked);
+      setLikes(localStats.likes);
+      setViews(localStats.views);
     } catch {
       setLiked(false);
       setLikes(baseLikes);
       setViews(baseViews);
     }
-  }, [item.id, item.likes, item.views]);
+
+    setRemoteStatsReady(false);
+    recordDetailView(statsKind, item.id)
+      .then((stats) => {
+        if (cancelled) return;
+        setRemoteStatsReady(true);
+        setLiked(stats.liked);
+        setLikes(stats.likes);
+        setViews(stats.views);
+      })
+      .catch(() => {
+        if (!cancelled) setRemoteStatsReady(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id, item.likes, item.views, statsKind]);
 
   useEffect(() => {
     let raf = 0;
@@ -171,24 +180,39 @@ export function DetailFloatingBar({ item, routeKey }: DetailFloatingBarProps) {
   }, [routeKey]);
 
   const toggleLike = () => {
-    setLiked((current) => {
-      const next = !current;
-      setLikes((count) => {
-        const nextCount = Math.max(0, count + (next ? 1 : -1));
+    const next = !liked;
+    const optimisticLikes = Math.max(0, likes + (next ? 1 : -1));
+
+    setLiked(next);
+    setLikes(optimisticLikes);
+    try {
+      writeLocalLike(item.id, next, optimisticLikes);
+    } catch {}
+
+    if (next) {
+      setBurst(true);
+      window.setTimeout(() => setBurst(false), 520);
+    }
+
+    setRemoteDetailLike(statsKind, item.id, next)
+      .then((stats) => {
+        setRemoteStatsReady(true);
+        setLiked(stats.liked);
+        setLikes(stats.likes);
+        setViews(stats.views);
+      })
+      .catch(() => {
+        setRemoteStatsReady(false);
         try {
-          localStorage.setItem(`${LIKE_STORAGE_PREFIX}-${item.id}`, String(nextCount));
+          writeLocalLike(item.id, next, optimisticLikes);
         } catch {}
-        return nextCount;
       });
-      try {
-        localStorage.setItem(`cw-appreciated-${item.id}`, String(next));
-      } catch {}
-      if (next) {
-        setBurst(true);
-        window.setTimeout(() => setBurst(false), 520);
-      }
-      return next;
-    });
+  };
+
+  const statsLabel = remoteStatsReady ? "Live stats" : "Local preview stats";
+
+  const formatCount = (count: number) => {
+    return new Intl.NumberFormat("en", { notation: "compact" }).format(count);
   };
 
   return (
@@ -213,12 +237,12 @@ export function DetailFloatingBar({ item, routeKey }: DetailFloatingBarProps) {
                 <span aria-hidden="true">{"\u00b7"}</span>
                 <span className="detail-float-meta-item">
                   <VisibilityRounded />
-                  {views}
+                  <span aria-label={`${statsLabel}: ${views} views`}>{formatCount(views)}</span>
                 </span>
                 <span aria-hidden="true">{"\u00b7"}</span>
                 <span className="detail-float-meta-item">
                   <ThumbUpRounded />
-                  {likes}
+                  <span aria-label={`${statsLabel}: ${likes} likes`}>{formatCount(likes)}</span>
                 </span>
               </div>
             </div>

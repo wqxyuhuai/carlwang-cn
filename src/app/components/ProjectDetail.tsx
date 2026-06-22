@@ -68,7 +68,11 @@ export function ProjectDetail({
         <ProjectContentRenderer blocks={blocks} fullWidth />
       </section>
 
-      <DetailFloatingBar item={project} routeKey={`project:${project.id}`} />
+      <DetailFloatingBar
+        item={project}
+        routeKey={`project:${project.id}`}
+        statsKind="project"
+      />
 
       <section className="content-shell py-12 flex items-center justify-between gap-4 max-md:grid max-md:grid-cols-2 max-md:py-8">
         {allWork.length > 1 ? (

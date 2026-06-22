@@ -1,8 +1,38 @@
 {
   "name": "carlwang-cn",
+  "main": "src/worker.js",
   "compatibility_date": "2026-06-03",
   "assets": {
+    "binding": "ASSETS",
     "directory": "./dist",
     "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "studio.carlwang.cn",
+      "custom_domain": true
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CW_STATS",
+      "id": "8bd589ac957e4085a13b39f8cd9620c5"
+    }
+  ],
+  "env": {
+    "demo": {
+      "routes": [
+        {
+          "pattern": "studio-demo.carlwang.cn",
+          "custom_domain": true
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CW_STATS",
+          "id": "09c3518a91db440288361eb029f4103e"
+        }
+      ]
+    }
   }
 }
