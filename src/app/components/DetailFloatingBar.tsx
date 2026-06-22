@@ -44,10 +44,71 @@ function relativeTime(time?: string, year?: number) {
   return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
-function backgroundIsDark(element: Element) {
-  if (element instanceof HTMLImageElement || element instanceof HTMLVideoElement) {
-    return true;
-  }
+function createMediaSampler() {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  canvas.width = 1;
+  canvas.height = 1;
+
+  return (element: Element, x: number, y: number) => {
+    if (!context) return null;
+    const isImage = element instanceof HTMLImageElement;
+    const isVideo = element instanceof HTMLVideoElement;
+    if (!isImage && !isVideo) return null;
+
+    const sourceWidth = isImage ? element.naturalWidth : element.videoWidth;
+    const sourceHeight = isImage ? element.naturalHeight : element.videoHeight;
+    if (!sourceWidth || !sourceHeight) return null;
+
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    const style = window.getComputedStyle(element);
+    const objectFit = style.objectFit || "fill";
+    let renderedWidth = rect.width;
+    let renderedHeight = rect.height;
+
+    if (objectFit === "contain" || objectFit === "scale-down") {
+      const scale = Math.min(rect.width / sourceWidth, rect.height / sourceHeight);
+      renderedWidth = sourceWidth * scale;
+      renderedHeight = sourceHeight * scale;
+    } else if (objectFit === "cover") {
+      const scale = Math.max(rect.width / sourceWidth, rect.height / sourceHeight);
+      renderedWidth = sourceWidth * scale;
+      renderedHeight = sourceHeight * scale;
+    }
+
+    const offsetX = (rect.width - renderedWidth) / 2;
+    const offsetY = (rect.height - renderedHeight) / 2;
+    const localX = x - rect.left - offsetX;
+    const localY = y - rect.top - offsetY;
+    if (localX < 0 || localY < 0 || localX > renderedWidth || localY > renderedHeight) {
+      return null;
+    }
+
+    const sx = Math.min(sourceWidth - 1, Math.max(0, Math.floor((localX / renderedWidth) * sourceWidth)));
+    const sy = Math.min(sourceHeight - 1, Math.max(0, Math.floor((localY / renderedHeight) * sourceHeight)));
+
+    try {
+      context.clearRect(0, 0, 1, 1);
+      context.drawImage(element as CanvasImageSource, sx, sy, 1, 1, 0, 0, 1, 1);
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+      if (a < 20) return null;
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    } catch {
+      return 0.26;
+    }
+  };
+}
+
+function backgroundLuminance(
+  element: Element,
+  x: number,
+  y: number,
+  sampleMedia: (element: Element, x: number, y: number) => number | null,
+) {
+  const media = sampleMedia(element, x, y);
+  if (media !== null) return media;
 
   const style = window.getComputedStyle(element);
   const color = style.backgroundColor.match(/rgba?\(([^)]+)\)/);
@@ -64,39 +125,90 @@ function backgroundIsDark(element: Element) {
     return null;
   }
 
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance < 0.42;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
 
 function sampleBackground(root: HTMLElement | null) {
   if (!root) return false;
+  const sampleMedia = createMediaSampler();
 
   const rect = root.getBoundingClientRect();
   const points = [
+    [rect.left + rect.width * 0.12, rect.top + rect.height * 0.35],
+    [rect.left + rect.width * 0.25, rect.top + rect.height * 0.35],
+    [rect.left + rect.width * 0.5, rect.top + rect.height * 0.35],
+    [rect.left + rect.width * 0.75, rect.top + rect.height * 0.35],
+    [rect.left + rect.width * 0.88, rect.top + rect.height * 0.35],
+    [rect.left + rect.width * 0.12, rect.top + rect.height * 0.5],
     [rect.left + rect.width * 0.25, rect.top + rect.height * 0.5],
     [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
     [rect.left + rect.width * 0.75, rect.top + rect.height * 0.5],
+    [rect.left + rect.width * 0.88, rect.top + rect.height * 0.5],
+    [rect.left + rect.width * 0.12, rect.top + rect.height * 0.65],
+    [rect.left + rect.width * 0.25, rect.top + rect.height * 0.65],
+    [rect.left + rect.width * 0.5, rect.top + rect.height * 0.65],
+    [rect.left + rect.width * 0.75, rect.top + rect.height * 0.65],
+    [rect.left + rect.width * 0.88, rect.top + rect.height * 0.65],
   ];
 
-  let darkVotes = 0;
-  let votes = 0;
+  const samples: number[] = [];
+  const mediaElements = Array.from(document.querySelectorAll<HTMLImageElement | HTMLVideoElement>("img, video"));
 
   for (const [x, y] of points) {
+    let result: number | null = null;
+    for (let index = mediaElements.length - 1; index >= 0; index -= 1) {
+      const element = mediaElements[index];
+      if (root.contains(element)) continue;
+      const rect = element.getBoundingClientRect();
+      const blurReach = 24;
+      if (
+        x < rect.left - blurReach ||
+        x > rect.right + blurReach ||
+        y < rect.top - blurReach ||
+        y > rect.bottom + blurReach
+      ) {
+        continue;
+      }
+      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        result = 0.26;
+        break;
+      }
+      result = sampleMedia(element, x, y);
+      if (result !== null) break;
+    }
+
     const elements = document.elementsFromPoint(x, y);
     for (const element of elements) {
+      if (result !== null) break;
       if (root.contains(element)) continue;
-      const result = backgroundIsDark(element);
-      if (result === null) continue;
-      votes += 1;
-      if (result) darkVotes += 1;
-      break;
+      result = sampleMedia(element, x, y);
+      if (result !== null) break;
+    }
+
+    if (result === null) {
+      for (const element of elements) {
+        if (root.contains(element)) continue;
+        result = backgroundLuminance(element, x, y, sampleMedia);
+        if (result !== null) break;
+      }
+    }
+
+    if (result !== null) {
+      samples.push(result);
     }
   }
 
-  if (votes) return darkVotes >= Math.ceil(votes / 2);
+  if (samples.length) {
+    const darkVotes = samples.filter((value) => value < 0.5).length;
+    const average = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+    const sorted = [...samples].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+
+    return darkVotes / samples.length >= 0.45 || average < 0.48 || median < 0.43;
+  }
+
   return document.documentElement.dataset.theme === "dark";
 }
-
 export function DetailFloatingBar({ item, routeKey, statsKind }: DetailFloatingBarProps) {
   const dockRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -219,7 +331,7 @@ export function DetailFloatingBar({ item, routeKey, statsKind }: DetailFloatingB
     <div ref={dockRef} className="detail-float-dock">
       <div
         ref={rootRef}
-        className={`detail-float ${visible ? "is-visible" : ""} ${onDark ? "is-on-dark" : ""} ${docked ? "is-docked" : ""}`}
+        className={`detail-float ${visible ? "is-visible" : ""} ${onDark ? "is-on-dark" : "is-on-light"} ${docked ? "is-docked" : ""}`}
         style={{ "--detail-float-bottom": "104px" } as CSSProperties}
       >
         <div className="cw-glass-wrapper detail-float-card">
