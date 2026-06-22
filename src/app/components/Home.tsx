@@ -32,7 +32,7 @@ export function Home({
   return (
     <div>
       <section className="relative overflow-hidden">
-        <div className="content-shell pt-40 pb-24 relative max-md:pt-28 max-md:pb-14">
+        <div className="content-shell pt-40 pb-24 relative max-md:pt-36 max-md:pb-14">
           <h1
             className="display reveal reveal-2 text-[var(--fg)] max-w-4xl max-md:text-[42px]"
             style={{ fontSize: "clamp(42px, 10vw, 64px)", lineHeight: 1.08 }}

@@ -30,14 +30,21 @@ export function Nav({
   secondary?: SecondaryNavConfig | null;
 }) {
   const headerRef = useRef<HTMLElement | null>(null);
+  const secondaryRef = useRef<HTMLElement | null>(null);
   const [navOnDark, setNavOnDark] = useState(false);
+  const [secondaryOnDark, setSecondaryOnDark] = useState(false);
   const items: { label: string; route: Route }[] = [
+    { label: "Home", route: "home" },
     { label: "Work", route: "work" },
     { label: "Lab", route: "lab" },
   ];
 
   useEffect(() => {
     let raf = 0;
+    const mediaCanvas = document.createElement("canvas");
+    const mediaContext = mediaCanvas.getContext("2d", { willReadFrequently: true });
+    mediaCanvas.width = 1;
+    mediaCanvas.height = 1;
 
     const luminance = (value: string) => {
       const match = value.match(/rgba?\(([^)]+)\)/);
@@ -51,31 +58,129 @@ export function Nav({
       return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
     };
 
-    const sampleElement = (x: number, y: number) => {
-      const header = headerRef.current;
+    const mediaLuminance = (element: Element, x: number, y: number) => {
+      if (!mediaContext) return null;
+      const isImage = element instanceof HTMLImageElement;
+      const isVideo = element instanceof HTMLVideoElement;
+      if (!isImage && !isVideo) return null;
+
+      const sourceWidth = isImage ? element.naturalWidth : element.videoWidth;
+      const sourceHeight = isImage ? element.naturalHeight : element.videoHeight;
+      if (!sourceWidth || !sourceHeight) return null;
+
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+
+      const style = window.getComputedStyle(element);
+      const objectFit = style.objectFit || "fill";
+      let renderedWidth = rect.width;
+      let renderedHeight = rect.height;
+
+      if (objectFit === "contain" || objectFit === "scale-down") {
+        const scale = Math.min(rect.width / sourceWidth, rect.height / sourceHeight);
+        renderedWidth = sourceWidth * scale;
+        renderedHeight = sourceHeight * scale;
+      } else if (objectFit === "cover") {
+        const scale = Math.max(rect.width / sourceWidth, rect.height / sourceHeight);
+        renderedWidth = sourceWidth * scale;
+        renderedHeight = sourceHeight * scale;
+      }
+
+      const offsetX = (rect.width - renderedWidth) / 2;
+      const offsetY = (rect.height - renderedHeight) / 2;
+      const localX = x - rect.left - offsetX;
+      const localY = y - rect.top - offsetY;
+      if (localX < 0 || localY < 0 || localX > renderedWidth || localY > renderedHeight) {
+        return null;
+      }
+
+      const sx = Math.min(sourceWidth - 1, Math.max(0, Math.floor((localX / renderedWidth) * sourceWidth)));
+      const sy = Math.min(sourceHeight - 1, Math.max(0, Math.floor((localY / renderedHeight) * sourceHeight)));
+
+      try {
+        mediaContext.clearRect(0, 0, 1, 1);
+        mediaContext.drawImage(element as CanvasImageSource, sx, sy, 1, 1, 0, 0, 1, 1);
+        const [r, g, b, a] = mediaContext.getImageData(0, 0, 1, 1).data;
+        if (a < 20) return null;
+        return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      } catch {
+        return 0.26;
+      }
+    };
+
+    const sampleElementLuminance = (x: number, y: number, overlay: HTMLElement | null) => {
+      const mediaElements = Array.from(document.querySelectorAll<HTMLImageElement | HTMLVideoElement>("img, video"));
+      for (let index = mediaElements.length - 1; index >= 0; index -= 1) {
+        const element = mediaElements[index];
+        if (overlay?.contains(element)) continue;
+        const rect = element.getBoundingClientRect();
+        const blurReach = 24;
+        if (
+          x < rect.left - blurReach ||
+          x > rect.right + blurReach ||
+          y < rect.top - blurReach ||
+          y > rect.bottom + blurReach
+        ) {
+          continue;
+        }
+        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+          return 0.26;
+        }
+        const media = mediaLuminance(element, x, y);
+        if (media !== null) return media;
+      }
+
       const stack = document.elementsFromPoint(x, y);
       for (const element of stack) {
-        if (header?.contains(element)) continue;
-        const tag = element.tagName.toLowerCase();
-        if (tag === "img" || tag === "video" || element.classList.contains("protected-media")) {
-          return true;
-        }
+        if (overlay?.contains(element)) continue;
+        const media = mediaLuminance(element, x, y);
+        if (media !== null) return media;
+      }
+
+      for (const element of stack) {
+        if (overlay?.contains(element)) continue;
         const style = window.getComputedStyle(element);
         const background = luminance(style.backgroundColor);
-        if (background !== null) return background < 0.42;
+        if (background !== null) return background;
       }
-      return document.documentElement.classList.contains("theme-dark");
+
+      return null;
+    };
+
+    const isDarkSurface = (samples: number[]) => {
+      if (!samples.length) return document.documentElement.classList.contains("theme-dark");
+
+      const darkVotes = samples.filter((value) => value < 0.5).length;
+      const average = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+      const sorted = [...samples].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+
+      return darkVotes / samples.length >= 0.45 || average < 0.48 || median < 0.43;
+    };
+
+    const sampleOverlay = (overlay: HTMLElement | null, yRatio: number) => {
+      if (!overlay) return document.documentElement.classList.contains("theme-dark");
+      const rect = overlay.getBoundingClientRect();
+      const yRatios = [Math.max(0.25, yRatio - 0.2), yRatio, Math.min(0.82, yRatio + 0.2)];
+      const xRatios = [0.1, 0.18, 0.3, 0.42, 0.54, 0.66, 0.78, 0.9];
+      const samples: number[] = [];
+
+      for (const yy of yRatios) {
+        const y = Math.max(rect.top + rect.height * yy, 1);
+        for (const xx of xRatios) {
+          const x = rect.left + rect.width * xx;
+          const value = sampleElementLuminance(x, y, overlay);
+          if (value !== null) samples.push(value);
+        }
+      }
+
+      return isDarkSurface(samples);
     };
 
     const update = () => {
       raf = 0;
-      const header = headerRef.current;
-      if (!header) return;
-      const rect = header.getBoundingClientRect();
-      const y = Math.max(rect.top + rect.height * 0.55, 1);
-      const xs = [rect.left + rect.width * 0.18, rect.left + rect.width * 0.5, rect.left + rect.width * 0.82];
-      const darkCount = xs.filter((x) => sampleElement(x, y)).length;
-      setNavOnDark(darkCount >= 2);
+      setNavOnDark(sampleOverlay(headerRef.current, 0.55));
+      setSecondaryOnDark(sampleOverlay(secondaryRef.current, 0.82));
     };
 
     const schedule = () => {
@@ -91,11 +196,11 @@ export function Nav({
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };
-  }, [route, theme]);
+  }, [route, theme, secondary]);
 
   return (
     <>
-      <header ref={headerRef} className={`cw-glass-header ${navOnDark ? "is-on-dark" : ""}`}>
+      <header ref={headerRef} className={`cw-glass-header ${navOnDark ? "is-on-dark" : "is-on-light"}`}>
         <nav className="cw-glass-wrapper" aria-label="Main navigation">
           <span className="cw-glass-effect" aria-hidden="true" />
           <div className="cw-glass-content">
@@ -162,7 +267,8 @@ export function Nav({
         </nav>
       </header>
       <section
-        className={`cw-secondary-tabs ${secondary ? "is-visible" : ""}`}
+        ref={secondaryRef}
+        className={`cw-secondary-tabs ${secondary ? "is-visible" : ""} ${secondaryOnDark ? "is-on-dark" : "is-on-light"}`}
         aria-label={secondary?.label ?? "Secondary navigation"}
         aria-hidden={!secondary}
       >
@@ -185,7 +291,7 @@ export function Nav({
                       secondary.active === tab ? "is-active" : ""
                     }`}
                   >
-                    {tab}
+                    <span className="cw-secondary-tab-label">{tab}</span>
                   </button>
                 ))}
               </div>
